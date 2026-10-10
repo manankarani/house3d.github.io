@@ -1,0 +1,5 @@
+# keep site-only; source media and CAD stay local
+*.dwg
+*.mp4
+WhatsApp*/
+.vscode/

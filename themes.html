@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Colour Themes</title>
+<style>
+  :root { --bg: #f6f4ef; --card: #fff; --text: #2a2723; --muted: #7a736a; --line: #e6e1d8; --accent: #b08a4f; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #1b1c1f; --card: #24262a; --text: #ece9e3; --muted: #a39d93; --line: #34373c; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, sans-serif; }
+  header { max-width: 1180px; margin: 0 auto; padding: 32px 16px 8px; }
+  h1 { margin: 0 0 4px; font-size: 26px; letter-spacing: .2px; }
+  header p { margin: 0; color: var(--muted); max-width: 760px; }
+  main { max-width: 1180px; margin: 0 auto; padding: 16px; display: grid; gap: 18px; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; }
+  .card.sel { outline: 3px solid var(--accent); outline-offset: -3px; }
+  svg { display: block; width: 100%; height: auto; }
+  .body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+  .title { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .title b { font-size: 17px; }
+  .k { font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .src { font-size: 12.5px; color: var(--muted); margin: 0; }
+  .sw { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .sw div { border-radius: 8px; height: 38px; border: 1px solid rgba(0,0,0,.08); position: relative; }
+  .sw span { position: absolute; left: 0; right: 0; bottom: -17px; font-size: 10.5px; color: var(--muted); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rows { margin-top: 14px; font-size: 13px; display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; }
+  .rows dt { color: var(--muted); } .rows dd { margin: 0; }
+  button { margin-top: auto; font: inherit; font-weight: 600; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--line); background: transparent; color: var(--text); cursor: pointer; }
+  button:hover { border-color: var(--accent); }
+  .card.sel button { background: var(--accent); border-color: var(--accent); color: #1d1a15; }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  footer { max-width: 1180px; margin: 0 auto; padding: 8px 16px 40px; color: var(--muted); font-size: 13px; }
+  footer a { color: inherit; }
+  #toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #2a2723; color: #fff; padding: 10px 16px; border-radius: 10px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+  #toast.on { opacity: 1; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Choose a colour theme</h1>
+  <p>Five palettes built from the 2026 colour forecasts: tonal, grounded, one family per room rather than high contrast. Each sets walls, wood, cabinets, fabrics, metal and the colour temperature of every light. Pick one and the 3D flat will be redecorated to match.</p>
+</header>
+<main id="grid"></main>
+<footer>
+  Sources: <a href="https://www.archdaily.com/1037721/2026-color-of-the-year-selections-highlight-tonal-depth-and-spatial-calm">ArchDaily</a> ·
+  <a href="https://www.benjaminmoore.com/en-us/paint-colors/color-of-the-year-2026">Benjamin Moore</a> ·
+  <a href="https://luxesource.com/trends/interior-design-color-trends-2026/">LUXE</a> ·
+  <a href="https://www.younghouselove.com/2026-color-of-the-year/">Young House Love</a> ·
+  <a href="https://www.hgtv.com/decorating/color/colors-of-the-year-pictures">HGTV</a> ·
+  <a href="https://litadirks.com/2026-colors-of-the-year-a-review-of-leading-paint-and-design-forecasts/">Lita Dirks</a>.
+  Hex values are close screen matches, not paint codes.
+</footer>
+<div id="toast" role="status"></div>
+<script>
+// Each theme: walls, accent wall, floor, wood, cabinets, sofa, recliner, metal, glass tint, light K
+const THEMES = [
+  { id: 'cloud', name: 'Cloud Dancer Calm', src: 'Pantone 2026 · Cloud Dancer, quiet-luxury refinement', k: 2700,
+    wall: '#f1ede6', accent: '#b9ab98', floor: '#e6dfd3', wood: '#9a7656', cab: '#dcd3c6', sofa: '#e8e1d5', recl: '#b9c7b5', metal: '#9b8363', glass: '#b8a893',
+    note: 'Warm plaster white, mushroom accents, travertine floor, smoked oak, ivory boucle, espresso depth, champagne bronze.' },
+  { id: 'silhouette', name: 'Refined Elegance', src: 'Benjamin Moore 2026 · Silhouette', k: 2700,
+    wall: '#efe9e0', accent: '#5b4a41', floor: '#e9e2d6', wood: '#6e4a31', cab: '#8a7667', sofa: '#e6ddd0', recl: '#a8927f', metal: '#c9a45c', glass: '#b89a78',
+    note: 'Warm white with burnt-umber accents, walnut, cream bouclé, brass. Hotel-like and warm.' },
+  { id: 'enterre', name: 'En Terre', src: 'Sherwin-Williams 2026 · Universal Khaki', k: 2700,
+    wall: '#ebe3d5', accent: '#b8a486', floor: '#e6dccb', wood: '#a67b52', cab: '#c9b79c', sofa: '#b86f52', recl: '#8c8a5e', metal: '#8a6a45', glass: '#c9b08f',
+    note: 'Ochre-khaki tones with terracotta and olive, oiled oak, bronze. Earthy and sunlit.' },
+  { id: 'jade', name: 'Restorative Green', src: 'Behr Hidden Gem · Dunn-Edwards Midnight Garden', k: 3000,
+    wall: '#ece9e1', accent: '#5e7f7b', floor: '#e8e3da', wood: '#8f6a48', cab: '#3b4a3f', sofa: '#e7e1d6', recl: '#a9d6ca', metal: '#c9a45c', glass: '#9fb5ae',
+    note: 'Greige walls, smoky jade and deep garden green joinery, teak, brass. Calm, wellness-led.' },
+  { id: 'mineral', name: 'Mineral Coast', src: '2026 mineral tones · deep blue + clay', k: 3500,
+    wall: '#f2f0ec', accent: '#2f4858', floor: '#ebe8e2', wood: '#b9a283', cab: '#d7d2c9', sofa: '#b86f52', recl: '#6f8796', metal: '#8e9196', glass: '#c5d2d8',
+    note: 'Crisp off-white, ink blue and clay, light ash, steel. Cooler, fresh for Mumbai light.' },
+];
+// Kelvin -> approximate light colour, for the preview glow
+const kToHex = k => ({ 2700: '#ffd9a8', 3000: '#ffe2bd', 3500: '#ffecd6' })[k] || '#fff';
+const room = t => `<svg viewBox="0 0 340 190" role="img" aria-label="${t.name} room preview">
+  <defs><radialGradient id="g${t.id}" cx="50%" cy="0%" r="80%"><stop offset="0" stop-color="${kToHex(t.k)}" stop-opacity=".55"/><stop offset="1" stop-color="${kToHex(t.k)}" stop-opacity="0"/></radialGradient></defs>
+  <rect width="340" height="190" fill="${t.wall}"/>
+  <rect x="0" y="0" width="120" height="150" fill="${t.accent}"/>
+  <rect x="150" y="26" width="120" height="78" fill="#cfe0ea" stroke="#1b1b1d" stroke-width="3"/>
+  <line x1="210" y1="26" x2="210" y2="104" stroke="#1b1b1d" stroke-width="2"/>
+  <rect x="0" y="150" width="340" height="40" fill="${t.floor}"/>
+  <rect x="285" y="40" width="55" height="110" fill="${t.cab}"/>
+  <rect x="285" y="60" width="55" height="40" fill="${t.glass}" opacity=".85"/>
+  <rect x="20" y="112" width="150" height="38" rx="10" fill="${t.sofa}"/>
+  <rect x="20" y="96" width="150" height="24" rx="10" fill="${t.sofa}" opacity=".9"/>
+  <rect x="190" y="118" width="80" height="32" rx="12" fill="${t.recl}"/>
+  <rect x="150" y="104" width="120" height="10" fill="${t.wood}"/>
+  <ellipse cx="190" cy="165" rx="42" ry="8" fill="${t.wood}"/>
+  <line x1="245" y1="0" x2="245" y2="34" stroke="${t.metal}" stroke-width="2"/><rect x="230" y="34" width="30" height="6" rx="2" fill="${t.metal}"/>
+  <rect width="340" height="190" fill="url(#g${t.id})"/>
+</svg>`;
+const sw = (c, l) => `<div style="background:${c}"><span>${l}</span></div>`;
+let chosen = null;
+try { chosen = localStorage.getItem('houseTheme'); } catch (e) {}
+const grid = document.getElementById('grid');
+grid.innerHTML = THEMES.map(t => `<article class="card${t.id === chosen ? ' sel' : ''}" data-id="${t.id}">
+  ${room(t)}
+  <div class="body">
+    <div class="title"><b>${t.name}</b><span class="k">${t.k} K lights</span></div>
+    <p class="src">${t.src}</p>
+    <div class="sw">${sw(t.wall, 'walls')}${sw(t.accent, 'accent')}${sw(t.wood, 'wood')}${sw(t.cab, 'joinery')}${sw(t.metal, 'metal')}</div>
+    <div class="sw" style="margin-top:14px">${sw(t.floor, 'floor')}${sw(t.sofa, 'sofa')}${sw(t.recl, 'recliner')}${sw(t.glass, 'glass')}${sw(kToHex(t.k), 'light')}</div>
+    <p class="src" style="margin-top:14px">${t.note}</p>
+    <button type="button">${t.id === chosen ? 'Selected' : 'Choose this theme'}</button>
+  </div></article>`).join('');
+grid.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const id = b.closest('.card').dataset.id, t = THEMES.find(x => x.id === id);
+  try { localStorage.setItem('houseTheme', id); localStorage.setItem('houseThemeData', JSON.stringify(t)); } catch (err) {}
+  document.querySelectorAll('.card').forEach(c => { const on = c.dataset.id === id; c.classList.toggle('sel', on); c.querySelector('button').textContent = on ? 'Selected' : 'Choose this theme'; });
+  const toast = document.getElementById('toast'); toast.textContent = `${t.name} selected. Tell Claude to redecorate.`;
+  toast.classList.add('on'); setTimeout(() => toast.classList.remove('on'), 2500);
+});
+</script>
+</body>
+</html>
