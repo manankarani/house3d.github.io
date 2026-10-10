@@ -1291,19 +1291,19 @@ wardrobe(7950, 10225, 4365, 1, 2880, 2);                // top wall: 5 bays, lit
   {
     const keep = m => { m.userData.keepColor = true; return m; };
     const S = 8315, W0 = 6975, E0 = 10225;
-    const walnut = keep(mat(0x5e4130, { roughness: 0.5 })), walnutL = keep(mat(0x7a5840, { roughness: 0.5 }));
-    const velvet = keep(mat(0x8a7563, { roughness: 0.95 })), velvetD = keep(mat(0x6f5d4e, { roughness: 0.95 }));
+    const walnut = keep(mat(0xc4a27e, { roughness: 0.5 })), walnutL = keep(mat(0xd6bb98, { roughness: 0.5 }));   // pale natural oak
+    const velvet = keep(mat(0xe6dccd, { roughness: 1 })), velvetD = keep(mat(0xdcd0bf, { roughness: 1 }));   // oat boucle
     const ivory = keep(mat(0xf2ede4, { roughness: 0.95 })), linen = keep(mat(0xe2d8c8, { roughness: 1 }));
-    const mocha = keep(mat(0x4e3d33, { roughness: 1 })), rust = keep(mat(0xa65a3a, { roughness: 0.9 }));
-    const bronze = keep(mat(0xa98754, { metalness: 0.85, roughness: 0.3 }));
+    const mocha = keep(mat(0xa9b39c, { roughness: 1 })), rust = keep(mat(0xc98f6e, { roughness: 0.9 }));   // soft sage + clay accents
+    const bronze = keep(mat(0xc8ae84, { metalness: 0.75, roughness: 0.3 }));   // champagne
     const trav = keep(mat(0xd9ccb6, { roughness: 0.6 })), greige = keep(mat(0xcfc5b6, { roughness: 0.7 }));
     const glow = keep(mat(0xfff1dc, { emissive: 0xffd9a0, emissiveIntensity: 2.2 }));
     const glass = keep(mat(0xf5e6cf, { emissive: 0xffd8a0, emissiveIntensity: 1.4, transparent: true, opacity: 0.9 }));
     const fluteTex = canvasTex(128, 16, (g, w, h) => { for (let x = 0; x < w; x += 16) { const gr = g.createLinearGradient(x, 0, x + 16, 0);
-      gr.addColorStop(0, '#3f2b1f'); gr.addColorStop(0.5, '#7a5840'); gr.addColorStop(1, '#3f2b1f'); g.fillStyle = gr; g.fillRect(x, 0, 16, h); } });
+      gr.addColorStop(0, '#b89a78'); gr.addColorStop(0.5, '#e2cdb0'); gr.addColorStop(1, '#b89a78'); g.fillStyle = gr; g.fillRect(x, 0, 16, h); } });
     fluteTex.wrapS = THREE.RepeatWrapping; fluteTex.repeat.set(16, 1);
     const flute = keep(mat(0xffffff, { map: fluteTex, roughness: 0.55 }));
-    const knitTex = canvasTex(64, 64, (g, w, h) => { g.fillStyle = '#4e3d33'; g.fillRect(0, 0, w, h); g.strokeStyle = 'rgba(255,255,255,.08)';
+    const knitTex = canvasTex(64, 64, (g, w, h) => { g.fillStyle = '#b7bfa8'; g.fillRect(0, 0, w, h); g.strokeStyle = 'rgba(255,255,255,.18)';
       for (let y = 0; y < h; y += 6) { g.beginPath(); g.moveTo(0, y); for (let x = 0; x <= w; x += 6) g.lineTo(x, y + (x / 6 % 2 ? 3 : 0)); g.stroke(); } });
     knitTex.wrapS = knitTex.wrapT = THREE.RepeatWrapping; knitTex.repeat.set(6, 3);
     const knit = keep(mat(0xffffff, { map: knitTex, roughness: 1 }));
@@ -1370,28 +1370,14 @@ wardrobe(7950, 10225, 4365, 1, 2880, 2);                // top wall: 5 bays, lit
     fb(DX1 + 200, S - 420, DX1 + 600, S - 300, 760, 772, keep(mat(0x2b2b2d)));    // keyboard
     cyl(DX2 - 140, 760, S - 460, 200, 18, bronze); cyl(DX2 - 140, 960, S - 460, 120, 70, glass);   // desk lamp
 
-    // --- reading corner by the window (clear of the wardrobe doors): boucle lounge chair, side table, floor lamp
-    { const CX = 9700, CZ = 5420;
-      const g = new THREE.Group(); g.position.set(CX, 0, CZ); g.rotation.y = -2.4; furn.add(g);
-      const bouc = keep(mat(0xece5d8, { roughness: 1 }));
-      for (const [w, h, d, x, y, z, r] of [[760, 260, 720, 0, 300, 0, 80], [760, 520, 160, 0, 600, -300, 80], [140, 300, 700, -330, 470, 0, 60], [140, 300, 700, 330, 470, 0, 60]]) {
-        const m = new THREE.Mesh(new RoundedBoxGeometry(w, h, d, 4, r), bouc); m.position.set(x, y, z); m.castShadow = true; g.add(m); }
-      for (const [x, z] of [[-300, -280], [300, -280], [-300, 280], [300, 280]]) { const l = new THREE.Mesh(new THREE.CylinderGeometry(16, 12, 170, 10), walnut); l.position.set(x, 85, z); g.add(l); }
-      cyl(10080 - 150, 0, 5980, 520, 25, bronze); { const t = new THREE.Mesh(new THREE.CylinderGeometry(200, 200, 30, 32), trav); t.position.set(9930, 535, 5980); furn.add(t); }
-      cyl(10000, 0, 4950 + 150, 20, 160, bronze); cyl(10000, 20, 5100, 1500, 12, bronze);   // floor lamp
-      const sh = new THREE.Mesh(new THREE.CylinderGeometry(150, 190, 260, 28, 1, true), keep(mat(0xf3e8d4, { emissive: 0xffd9a0, emissiveIntensity: 1.2, side: THREE.DoubleSide })));
-      sh.position.set(10000, 1640, 5100); furn.add(sh); }
-
     // --- layered window treatment: lit pelmet, sheer + heavy drapes at both ends
-    fb(E0 - 180, 5150, E0, 8300, 2760, 2880, greige);
+    fb(E0 - 180, 5150, E0, 8300, 2760, 2880, ivory);
     fb(E0 - 182, 5150, E0 - 178, 8300, 2752, 2760, glow);
     for (const [z1, z2] of [[5170, 5490], [8090, 8290]]) {
-      for (let z = z1; z < z2 - 40; z += 60) rbox(70, 2640, 70, E0 - 110, 1440, z + 35, 30, mocha);   // pleated drapes
+      for (let z = z1; z < z2 - 40; z += 60) rbox(70, 2640, 70, E0 - 110, 1440, z + 35, 30, linen);   // pleated oat-linen drapes
     }
-    // --- large wool rug + bench at the foot
+    // --- large wool rug
     fb(7650, 5650, 10000, 7750, 50, 64, rugM);
-    rbox(1300, 380, 420, 8990, 250, 6030, 60, velvetD);
-    for (const x of [8400, 9580]) { const l = new THREE.Mesh(new THREE.CylinderGeometry(20, 14, 60, 10), bronze); l.position.set(x, 30, 6030); furn.add(l); }
   }
 
   // Bedroom 2 (x 8075-11092, z 75-2945; pillar x 8075-8227, z 75-1599; door in the south wall at the
