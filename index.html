@@ -1365,9 +1365,20 @@ wardrobe(7950, 10225, 4365, 1, 2880, 2);                // top wall: 5 bays, lit
       fb(a + 3, S - 376, b - 3, S - 360, 1605, 2395, keep(mat(0xd8cdb9, { transparent: true, opacity: 0.55, roughness: 0.25 })));
       fb(a + 3, S - 380, a + 23, S - 360, 1605, 2395, bronze); fb(b - 23, S - 380, b - 3, S - 360, 1605, 2395, bronze);
     }
-    fb(DX1 + 120, S - 120, DX1 + 680, S - 90, 1000, 1290, keep(mat(0x111214, { roughness: 0.2 })));   // slim monitor in the niche zone
-    fb(DX1 + 380, S - 130, DX1 + 420, S - 90, 760, 1000, bronze);
-    fb(DX1 + 200, S - 420, DX1 + 600, S - 300, 760, 772, keep(mat(0x2b2b2d)));    // keyboard
+    { // MacBook Pro 14" (≈313 x 221 x 16), space grey, open ~110°, facing you as you sit at the desk
+      const alu = keep(mat(0x9a9ca0, { metalness: 0.8, roughness: 0.35 })), keys = keep(mat(0x1a1a1c, { roughness: 0.7 }));
+      const pad = keep(mat(0xa9abaf, { metalness: 0.5, roughness: 0.25 }));
+      const scr = keep(mat(0x1b2a3a, { emissive: 0x3f6f9f, emissiveIntensity: 0.55, roughness: 0.1 }));
+      const MX = 7720, Z1 = S - 520, Z2 = Z1 + 221, Y = 760;
+      fb(MX - 156, Z1, MX + 156, Z2, Y, Y + 8, alu);                                // base
+      fb(MX - 135, Z1 + 105, MX + 135, Z2 - 18, Y + 8, Y + 9, keys);               // keyboard well
+      fb(MX - 55, Z1 + 12, MX + 55, Z1 + 82, Y + 8, Y + 8.5, pad);                 // trackpad
+      const lid = new THREE.Group(); lid.position.set(MX, Y + 8, Z2); lid.rotation.x = -0.35; furn.add(lid);   // hinge at the back, tilted back
+      box(313, 214, 6, 0, 107, 0, alu, lid);                                         // lid shell
+      box(296, 190, 1, 0, 110, -3.5, scr, lid);                                      // display
+      box(296, 10, 1, 0, 8, -3.5, keys, lid);                                        // bottom bezel
+      for (const x of [-120, 120]) fb(MX + x - 20, Z1 + 10, MX + x + 20, Z1 + 30, Y - 2, Y, keys);   // feet
+    }
     cyl(DX2 - 140, 760, S - 460, 200, 18, bronze); cyl(DX2 - 140, 960, S - 460, 120, 70, glass);   // desk lamp
 
     // --- layered window treatment: lit pelmet, sheer + heavy drapes at both ends
