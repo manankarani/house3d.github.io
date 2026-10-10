@@ -2,6 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>13th Floor 3D</title>
 <style>
   body { margin: 0; overflow: hidden; background: #1b1d22; font-family: system-ui, sans-serif; }
@@ -38,6 +39,11 @@
   #expand { position: fixed; top: 16px; left: 16px; font: 13px system-ui; color: var(--text); background: var(--bg); border: 1px solid var(--line);
     border-radius: 10px; padding: 8px 12px; cursor: pointer; backdrop-filter: blur(12px); }
   #walkHint[hidden] { display: none !important; }
+  #joy { position: fixed; left: 24px; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); width: 130px; height: 130px; border-radius: 50%;
+    background: rgba(22,24,29,.35); border: 2px solid rgba(255,255,255,.35); touch-action: none; z-index: 6; }
+  #joyKnob { position: absolute; left: 40px; top: 40px; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,.75); }
+  #joy[hidden] { display: none !important; }
+  canvas { touch-action: none; }
   @media (max-width: 520px) { #panel { width: calc(100vw - 32px); max-height: 60vh; } }
 </style>
 <script type="importmap">
@@ -89,9 +95,10 @@
   </footer>
 </div>
 <div id="walkHint" hidden style="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:rgba(22,24,29,.86);color:#ece9e3;font:13px system-ui;padding:10px 14px;border-radius:10px;display:flex;gap:12px;align-items:center;z-index:5">
-  <span>Click the view to look around · <kbd>Esc</kbd> again to leave</span>
+  <span id="walkHintText">Click the view to look around · <kbd>Esc</kbd> again to leave</span>
   <button id="exitWalk" style="font:inherit;color:#1c1a16;background:#c9a45c;border:0;border-radius:8px;padding:6px 10px;cursor:pointer">Exit walk</button>
 </div>
+<div id="joy" hidden aria-label="Walk joystick"><div id="joyKnob"></div></div>
 <button id="expand" hidden>☰ Controls</button>
 <script type="module">
 import * as THREE from 'three';
@@ -2038,7 +2045,7 @@ for (const b of $('dragSeg').children) b.onclick = () => {
   controls.mouseButtons.RIGHT = pan ? THREE.MOUSE.ROTATE : THREE.MOUSE.PAN;
   for (const o of $('dragSeg').children) o.classList.toggle('on', o === b);
 };
-$('walkBtn').onclick = () => { enterWalk(3000, 2600, 0); walk.lock(); };   // living room, facing the windows
+$('walkBtn').onclick = () => { enterWalk(3000, 2600, 0); if (!isTouch) walk.lock(); };   // living room, facing the windows
 $('resetBtn').onclick = () => { exitWalk(); camera.position.set(5500, 15000, 18000); controls.target.set(5500, 0, 4200); controls.update(); };
 $('collapse').onclick = () => { $('panel').hidden = true; $('expand').hidden = false; };
 $('expand').onclick = () => { $('panel').hidden = false; $('expand').hidden = true; };
@@ -2066,18 +2073,49 @@ function enterWalk(x, z, yawDeg = 0, pitchDeg = 0) {
   walls.scale.y = 1;                                  // full-height walls when standing inside
   upper.visible = true;                               // real ceiling above you
   walkFov(); camera.updateProjectionMatrix();         // human-like view, independent of window shape
+  if (isTouch) { joyEl.hidden = false; walkHint.hidden = false; document.getElementById('panel').hidden = true; document.getElementById('expand').hidden = false; }
   camera.position.set(x, EYE, z);
   camera.rotation.set(THREE.MathUtils.degToRad(pitchDeg), THREE.MathUtils.degToRad(yawDeg), 0, 'YXZ');   // 0,0 = level, facing the windows
 }
 function exitWalk() {
   if (!walking) return;
   walking = false;
-  walkHint.hidden = true;
+  walkHint.hidden = true; joyEl.hidden = true; joy.x = joy.y = 0;
   camera.fov = 50; camera.updateProjectionMatrix();
   camera.position.copy(saved.pos); controls.target.copy(saved.target); walls.scale.y = saved.wallsY;
   upper.visible = saved.upper;
   controls.enabled = true; controls.update(); saved = null;
 }
+// ---- Touch / mobile walk: left joystick moves, drag anywhere else looks, double-tap a floor to stand there
+const isTouch = matchMedia('(pointer: coarse)').matches || (navigator.maxTouchPoints > 0 && !matchMedia('(hover: hover)').matches);
+const joyEl = document.getElementById('joy'), joyKnob = document.getElementById('joyKnob');
+const joy = { x: 0, y: 0, id: null };
+const joyMove = e => {
+  const r = joyEl.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2, R = r.width / 2 - 25;
+  let dx = e.clientX - cx, dy = e.clientY - cy; const d = Math.hypot(dx, dy); if (d > R) { dx *= R / d; dy *= R / d; }
+  joy.x = dx / R; joy.y = dy / R; joyKnob.style.transform = `translate(${dx}px, ${dy}px)`;
+};
+joyEl.addEventListener('pointerdown', e => { joy.id = e.pointerId; joyEl.setPointerCapture(e.pointerId); joyMove(e); });
+joyEl.addEventListener('pointermove', e => { if (e.pointerId === joy.id) joyMove(e); });
+const joyEnd = e => { if (e.pointerId !== joy.id) return; joy.id = null; joy.x = joy.y = 0; joyKnob.style.transform = ''; };
+joyEl.addEventListener('pointerup', joyEnd); joyEl.addEventListener('pointercancel', joyEnd);
+if (isTouch) document.getElementById('walkHintText').textContent = 'Left stick walks · drag to look around';
+const lastTouch = new Map(); let lastTap = 0;
+renderer.domElement.addEventListener('pointerdown', e => {
+  if (e.pointerType !== 'touch') return;
+  lastTouch.set(e.pointerId, [e.clientX, e.clientY]);
+  const now = performance.now();
+  if (!walking && now - lastTap < 300) renderer.domElement.dispatchEvent(new MouseEvent('dblclick', { clientX: e.clientX, clientY: e.clientY }));
+  lastTap = now;
+});
+renderer.domElement.addEventListener('pointermove', e => {
+  if (e.pointerType !== 'touch' || !walking || !lastTouch.has(e.pointerId)) return;
+  const [px, py] = lastTouch.get(e.pointerId); lastTouch.set(e.pointerId, [e.clientX, e.clientY]);
+  const eu = new THREE.Euler(0, 0, 0, 'YXZ').setFromQuaternion(camera.quaternion);
+  eu.y -= (e.clientX - px) * 0.005; eu.x = THREE.MathUtils.clamp(eu.x - (e.clientY - py) * 0.005, -1.4, 1.4);
+  camera.quaternion.setFromEuler(eu);
+});
+for (const ev of ['pointerup', 'pointercancel']) renderer.domElement.addEventListener(ev, e => lastTouch.delete(e.pointerId));
 renderer.domElement.addEventListener('dblclick', e => {
   if (walking) return;
   const ray = new THREE.Raycaster();
@@ -2085,7 +2123,7 @@ renderer.domElement.addEventListener('dblclick', e => {
   const hit = ray.intersectObjects(floors)[0];
   if (!hit) return;
   enterWalk(hit.point.x, hit.point.z);
-  walk.lock();
+  if (!isTouch) walk.lock();
 });
 // Losing mouse-look (Print Screen, Alt+Tab, notifications, first Esc) keeps you standing where you are;
 // click the view to look around again. Leave with Esc (when not locked) or the Exit button.
@@ -2098,7 +2136,7 @@ addEventListener('keydown', e => { if (e.code === 'Escape' && walking && !walk.i
 // Fallback when the viewer blocks pointer lock (some embedded previews): drag to look around.
 const look = new THREE.Euler(0, 0, 0, 'YXZ');
 renderer.domElement.addEventListener('pointermove', e => {
-  if (!walking || walk.isLocked || !(e.buttons & 1)) return;
+  if (!walking || walk.isLocked || e.pointerType === 'touch' || !(e.buttons & 1)) return;
   look.setFromQuaternion(camera.quaternion);
   look.y -= e.movementX * 0.003;
   look.x = THREE.MathUtils.clamp(look.x - e.movementY * 0.003, -1.4, 1.4);
@@ -2244,7 +2282,7 @@ renderer.setAnimationLoop(() => {
   if (walking) {
     const f = (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0);
     const r = (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0);
-    walk.moveForward(f * SPEED * dt); walk.moveRight(r * SPEED * dt);
+    walk.moveForward((f - joy.y) * SPEED * dt); walk.moveRight((r + joy.x) * SPEED * dt);   // keys + touch joystick
   } else controls.update();
   for (const f of tickers) f(dt);
   composer.render(dt); labelRenderer.render(scene, camera);
