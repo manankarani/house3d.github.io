@@ -7,7 +7,9 @@
 #   export GITHUB_TOKEN=ghp_xxx   (never committed; only sent to api.github.com)
 set -euo pipefail
 OWNER=manankarani REPO=house3d.github.io USERSITE=manankarani.github.io
-: "${GITHUB_TOKEN:?export GITHUB_TOKEN first (classic token, repo scope)}"
+# token: $GITHUB_TOKEN, else ./token.txt next to this script (git-ignored, never committed)
+if [ -z "${GITHUB_TOKEN:-}" ] && [ -f "$(dirname "$0")/token.txt" ]; then GITHUB_TOKEN=$(tr -d ' \r\n' < "$(dirname "$0")/token.txt"); fi
+: "${GITHUB_TOKEN:?put a token in token.txt or export GITHUB_TOKEN}"
 api() { curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" "$@"; }
 
 echo "1/3 removing custom domain from $USERSITE"
