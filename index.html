@@ -1411,38 +1411,50 @@ wardrobe(7950, 10225, 4365, 1, 2880, 2);                // top wall: 5 bays, lit
     const mirror = keep(mat(0xe6eef0, { metalness: 0.9, roughness: 0.04 }));
     const glow = keep(mat(0xfff1dc, { emissive: 0xffd9a0, emissiveIntensity: 2 }));
     const W = 8075, E = 11092, S = 2945, TOP = 2980;
-    // --- sliding wardrobe on the south wall
-    const WX1 = 9000, WZ = S - 600;
-    fb(WX1, WZ + 40, E, S, 0, 80, M.dark); fb(WX1, WZ, E, S, 80, TOP, body);
-    const np = 3, pw = (E - WX1) / np;
-    for (let i = 0; i < np; i++) {
-      const a = WX1 + i * pw - (i ? 15 : 0), b = WX1 + (i + 1) * pw, zf = WZ - (i % 2 ? 18 : 40);   // two tracks, panels overlap
-      fb(a, zf, b, zf + 20, 90, 2380, oat);
-      fb(i % 2 ? a + 30 : b - 42, zf - 14, (i % 2 ? a + 30 : b - 42) + 12, zf, 800, 1800, pullM);   // long recessed pull
+    // --- one merged south-wall unit, light finishes (refs: arched niche + wardrobe + pull-out desk):
+    // door side -> east: arched lit niche (400) | 2-door wardrobe (932) | dressing table (800, 450 deep)
+    // with a mirror door over a makeup cabinet, cabinets above. White matte + natural oak, champagne pulls.
+    {
+      const wh = keep(mat(0xf2efe9, { roughness: 0.55 })), oakN = keep(mat(0xd2b48c, { roughness: 0.5 }));
+      const F = S - 600, X0 = 8960, NX = 9360, WX = 10292;
+      fb(X0, F + 40, E, S, 0, 80, keep(mat(0xd9d3c9)));                        // recessed plinth
+      // arched niche: oak-lined, lit shelves, closed base, white arched front frame
+      fb(X0, F, NX, S, 80, 750, wh); fb(X0 + 3, F - 18, NX - 3, F, 90, 740, wh);   // base cabinet + door
+      fb(X0, S - 20, NX, S, 750, 2980, oakN);                                   // oak back
+      fb(X0, F, X0 + 20, S, 750, 2980, oakN); fb(NX - 20, F, NX, S, 750, 2980, oakN);
+      for (const y of [1150, 1550, 1950]) { fb(X0 + 20, F + 20, NX - 20, S - 20, y, y + 20, oakN); fb(X0 + 20, F + 20, NX - 20, F + 30, y - 10, y, glow); }
+      { const sh = new THREE.Shape([[0, 750], [400, 750], [400, 2980], [0, 2980]].map(p => new THREE.Vector2(...p)));
+        const h = new THREE.Path(); h.moveTo(30, 750); h.lineTo(370, 750); h.lineTo(370, 2200); h.absarc(200, 2200, 170, 0, Math.PI, false); h.lineTo(30, 750); sh.holes.push(h);
+        const fr = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: 20, bevelEnabled: false }), wh); fr.position.set(X0, 0, F - 20); furn.add(fr); }
+      cyl(X0 + 200, 1170, F + 300, 160, 55, keep(mat(0xd9cfc0))); fb(X0 + 80, F + 200, X0 + 320, F + 420, 1570, 1600, keep(mat(0xefe9df)));   // (W is the wall x here)
+      cyl(X0 + 140, 1970, F + 300, 120, 45, keep(mat(0x9a5b3c)));
+      // wardrobe: 2 hinged doors + loft, recessed champagne pulls
+      fb(NX, F, WX, S, 80, 2980, keep(mat(0xe2ddd4)));
+      const dw = (WX - NX) / 2;
+      for (let i = 0; i < 2; i++) {
+        const a = NX + i * dw + 2, b = a + dw - 4;
+        fb(a, F - 18, b, F, 90, 2380, wh); fb(a, F - 18, b, F, 2400, 2976, wh);
+        const px = i ? a + 30 : b - 42; fb(px, F - 30, px + 12, F - 18, 900, 1700, champ);
+      }
+      fb(NX, F - 18, WX, F - 16, 2380, 2400, keep(mat(0xd9d3c9)));
+      // dressing table pulled out of the run: shallower top, drawer, knee space, mirror door + makeup cabinet
+      const T = S - 450;
+      fb(WX, T, E, S, 720, 760, oakN);                                           // oak top
+      fb(WX + 5, T + 10, E, S, 600, 720, wh); fb(WX + 300, T + 4, WX + 500, T + 10, 650, 662, champ);   // drawer
+      fb(WX, S - 150, E, S, 1000, 2000, keep(mat(0xe2ddd4)));                   // makeup cabinet (150 deep)
+      for (const y of [1250, 1500, 1750]) fb(WX + 10, S - 140, E - 10, S - 5, y, y + 10, wh);
+      let k2 = 0; for (const y of [1260, 1510]) for (let x = WX + 80; x < E - 60; x += 90) cyl(x, y, S - 70, 70 + (k2 % 3) * 35, 20, keep(mat([0xb5582e, 0xd9a441, 0xe8d6c6, 0xc9a7a0][k2++ % 4], { roughness: 0.4 })));
+      const md = new THREE.Group(); md.position.set(WX + 5, 0, S - 150); furn.add(md);   // mirror door, hinged at the wardrobe side
+      box(E - WX - 10, 1000, 18, (E - WX - 10) / 2, 1500, -9, wh, md);
+      box(E - WX - 50, 960, 4, (E - WX - 10) / 2, 1500, -20, mirror, md);
+      box(E - WX - 50, 6, 6, (E - WX - 10) / 2, 1995, -22, glow, md);
+      window.dressMirror = md;
+      fb(WX, S - 350, E, S, 2050, 2980, wh);                                     // cabinet above
+      for (const [a, b] of [[WX, (WX + E) / 2], [(WX + E) / 2, E]]) fb(a + 2, S - 368, b - 2, S - 350, 2055, 2976, wh);
+      { const st = new THREE.Mesh(new THREE.CylinderGeometry(180, 160, 430, 32), keep(mat(0xe8dfd2, { roughness: 1 })));
+        st.position.set((WX + E) / 2, 215, T - 230); furn.add(st); }               // stool tucks under
     }
-    fb(WX1, WZ - 42, E, WZ, 2380, 2400, M.dark);                               // top track
-    for (let i = 0; i < 4; i++) fb(WX1 + i * (E - WX1) / 4 + 2, WZ - 18, WX1 + (i + 1) * (E - WX1) / 4 - 2, WZ, 2400, TOP - 4, loftM);   // loft doors
-    // --- dressing unit on the west wall (z 1610-2170)
-    const DZ1 = 1610, DZ2 = 2170, DT = W + 450;
-    fb(W, DZ1, DT, DZ2, 700, 740, K.quartz);                                  // quartz top, as in the kitchen
-    fb(W, DZ1 + 10, DT - 10, DZ2 - 10, 560, 700, oat);
-    fb(DT - 10, (DZ1 + DZ2) / 2 - 2, DT, (DZ1 + DZ2) / 2 + 2, 570, 690, M.dark);
-    for (const z of [DZ1 + 120, DZ2 - 120]) fb(DT - 6, z - 50, DT, z + 50, 650, 660, pullM);
-    const MC = W + 180;
-    fb(W, DZ1, MC, DZ2, 900, 2380, body);
-    for (const y of [1150, 1450, 1750, 2050]) fb(W + 10, DZ1 + 10, MC - 10, DZ2 - 10, y, y + 12, ivory);
-    fb(MC - 12, DZ1 + 15, MC - 6, DZ2 - 15, 2360, 2366, glow);
-    const pal = [0xb5582e, 0xd9a441, 0xe8d6c6, 0x6b3b3b, 0xc9a7a0, 0x2b2b2b];
     let k = 0;
-    for (const y of [1162, 1462, 1762]) for (let z = DZ1 + 60; z < DZ2 - 60; z += 70) cyl(W + 90, y, z, 80 + (k % 3) * 40, 22, keep(mat(pal[k++ % pal.length], { roughness: 0.4 })));
-    const md = new THREE.Group(); md.position.set(MC, 0, DZ1 + 5); furn.add(md);
-    box(18, 1470, DZ2 - DZ1 - 10, 9, 1640, (DZ2 - DZ1 - 10) / 2, oat, md);
-    box(4, 1430, DZ2 - DZ1 - 40, 20, 1640, (DZ2 - DZ1 - 10) / 2, mirror, md);
-    box(6, 1470, 6, 21, 1640, DZ2 - DZ1 - 30, glow, md);
-    window.dressMirror = md;                                                // own switch, closed by default
-    fb(W, DZ1 - 10, DT + 40, DZ1, 0, 2380, oat); fb(W, DZ2, DT + 40, DZ2 + 10, 0, 2380, oat);
-    { const st = new THREE.Mesh(new THREE.CylinderGeometry(190, 170, 430, 32), keep(mat(0xe2d6c4, { roughness: 1 })));
-      st.position.set(DT + 260, 215, (DZ1 + DZ2) / 2); st.castShadow = true; furn.add(st); }
     // --- queen bed, head on the east wall, no headboard
     const BX1 = E - 2032, BX2 = E, BZ1 = 230, BZ2 = 1754, BZC = (BZ1 + BZ2) / 2;
     fb(BX1 + 60, BZ1 + 60, BX2, BZ2 - 60, 0, 90, M.dark);
@@ -1454,7 +1466,6 @@ wardrobe(7950, 10225, 4365, 1, 2880, 2);                // top wall: 5 bays, lit
     for (const z of [BZ1 + 380, BZ2 - 380]) rbox(400, 160, 620, BX2 - 250, 640, z, 70, ivory);   // pillows
     for (const z of [BZ1 + 470, BZ2 - 470]) { const c = rbox(120, 380, 380, BX2 - 430, 760, z, 60, k++ % 2 ? clay : sage); c.rotation.z = 0.3; }
     // aisle-side floating shelf + wall lights + art on the east wall
-    fb(E - 300, BZ2 + 20, E, BZ2 + 320, 540, 570, oak); fb(E - 280, BZ2 + 20, E, BZ2 + 320, 470, 540, oat);
     for (const z of [BZ1 + 60, BZ2 + 170]) {
       fb(E - 30, z - 40, E, z + 40, 1150, 1250, champ);
       cyl(E - 90, 1080, z, 140, 70, keep(mat(0xf5e6cf, { emissive: 0xffd8a0, emissiveIntensity: 1.3 })));
