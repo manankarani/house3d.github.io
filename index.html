@@ -399,9 +399,9 @@ function bossChair(x, z, rot) {
 // rods (1900 / 1000, shirts + trousers), 'shelves' = folded shelves over 3 drawers. Loft above 2400.
 // Hinged door leaves are groups; the "Wardrobes open" switch swings them out.
 const wardrobeDoors = [];
-function wardrobeRun(x1, x2, back, dir, top, types, hinges = []) {   // hinges[i]: +1 left / -1 right (single-leaf sections)
+function wardrobeRun(x1, x2, back, dir, top, types, hinges = [], pal = {}) {   // hinges[i]: +1 left / -1 right (single-leaf sections)
   const keep = m => { m.userData.keepColor = true; return m; };
-  const shut = keep(mat(0xf2efe9, { roughness: 0.55 })), carc = keep(mat(0xe4ddd2)), oakI = keep(mat(0xd6bb98, { roughness: 0.55 }));
+  const shut = keep(mat(pal.shut ?? 0xf2efe9, { roughness: 0.55 })), carc = keep(mat(pal.carc ?? 0xe4ddd2)), oakI = keep(mat(0xd6bb98, { roughness: 0.55 }));
   const champ = keep(mat(0xc8ae84, { metalness: 0.75, roughness: 0.3 })), rodM = keep(mat(0xb9bcc0, { metalness: 0.8, roughness: 0.3 }));
   const ledM = keep(mat(0xfff1dc, { emissive: 0xffd9a0, emissiveIntensity: 1.8 }));
   const cloth = [0xe9e4da, 0x8fa39a, 0xc98f6e, 0x3f4a5c, 0xd9c7a3, 0xf4f4f2, 0x9a7cae, 0xb5582e].map(c => keep(mat(c, { roughness: 0.95 })));
@@ -1473,36 +1473,43 @@ wardrobeRun(7950, 10225, 4365, 1, 2880, ['long', 'double', 'shelves']);   // det
     //   niche with mirror, desk top 760). Desk continues along the east wall to z 1800 (550 deep) with a
     //   drawer band, open knee space and an oak leg panel; stool tucks under. Bed ends at z 1754.
     {
-      const wh = keep(mat(0xf3f0ec, { roughness: 0.45 })), oakR = keep(mat(0xd9bf9b, { roughness: 0.5 }));
-      const carcR = keep(mat(0xe6e0d6)), F = S - 600;
+      // lighter take on the kitchen finish: light taupe shutters, pale greige carcass, oak, champagne pulls
+      const wh = keep(mat(0xd9cec0, { roughness: 0.5 })), oakR = keep(mat(0xd9bf9b, { roughness: 0.5 }));
+      const carcR = keep(mat(0xe8e1d6)), F = S - 600;
       const TX1 = 9000, TX2 = 9500, WX2 = 10300, DX = E - 550, DZ1 = 1800, TOPD = 760;
       // tower: plinth, 3 drawers, curved open shelves 900-1850, top cabinet
       fb(TX1, F + 40, TX2, S, 0, 80, M.dark);
-      fb(TX1, F, TX2, S, 80, TOP, carcR);
+      fb(TX1 + 20, F, TX2, S, 80, 900, carcR); fb(TX1 + 20, F, TX2, S, 1850, TOP, carcR);   // carcass, hollow where the side niche is
       for (const [y0, y1] of [[90, 360], [370, 630], [640, 890]]) {
         fb(TX1 + 3, F - 18, TX2 - 3, F, y0, y1, wh);
         fb(TX1 + 3, F - 22, TX2 - 3, F - 18, y1 - 6, y1, keep(mat(0xd8d2c8)));   // handle-less finger groove
       }
-      fb(TX1 + 18, F, TX2 - 18, S - 18, 900, 1850, oakR);                      // oak-lined shelf cavity
-      for (const y of [900, 1200, 1520]) { fb(TX1 + 18, F + 10, TX2 - 18, S - 18, y, y + 18, oakR); fb(TX1 + 40, F + 20, TX2 - 40, F + 30, y + 170, y + 180, glow); }
-      { const w = TX2 - TX1, sh = new THREE.Shape([[0, 880], [w, 880], [w, 1870], [0, 1870]].map(p => new THREE.Vector2(...p)));
-        const ho = new THREE.Path(); ho.moveTo(w - 30, 900); ho.lineTo(w - 30, 1850); ho.lineTo(230, 1850);
-        ho.bezierCurveTo(110, 1850, 220, 1430, 40, 1380); ho.lineTo(40, 900); ho.lineTo(w - 30, 900); sh.holes.push(ho);
-        const fr = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: 20, bevelEnabled: false }), wh); fr.position.set(TX1, 0, F - 20); fr.castShadow = true; furn.add(fr); }
-      cyl(TX1 + 330, 918, F + 280, 160, 50, keep(mat(0xd9cfc0))); cyl(TX1 + 300, 1538, F + 300, 120, 40, keep(mat(0x9a5b3c)));
-      for (let i = 0; i < 4; i++) fb(TX1 + 220 + i * 40, F + 140, TX1 + 252 + i * 40, F + 380, 1218, 1430 - i * 12, keep(mat([0xefe9df, 0x8c6b52, 0xd9cfc0, 0x2f2f33][i])));
+      // open shelves cut into the tower's SIDE (the depth face, facing the bedroom door), S-curve edge
+      fb(TX2 - 40, F + 20, TX2 - 20, S - 20, 900, 1850, oakR);                 // oak back of the niche
+      for (const y of [900, 1210, 1530, 1832]) fb(TX1 + 20, F + 20, TX2 - 40, S - 20, y, y + 18, oakR);
+      for (const y of [1190, 1510, 1820]) fb(TX1 + 40, F + 30, TX1 + 50, S - 30, y, y + 8, glow);
+      fb(TX1 + 20, F + 20, TX2 - 40, F + 38, 900, 1850, oakR); fb(TX1 + 20, S - 38, TX2 - 40, S - 20, 900, 1850, oakR);
+      cyl(TX1 + 200, 918, (F + S) / 2, 160, 50, keep(mat(0xd9cfc0))); cyl(TX1 + 180, 1548, F + 200, 120, 40, keep(mat(0x9a5b3c)));
+      for (let i = 0; i < 4; i++) fb(TX1 + 120, F + 200 + i * 40, TX1 + 360, F + 232 + i * 40, 1228, 1440 - i * 12, keep(mat([0xefe9df, 0x8c6b52, 0xd9cfc0, 0x2f2f33][i])));
+      { const Dp = S - F, sh = new THREE.Shape([[0, 0], [Dp, 0], [Dp, TOP], [0, TOP]].map(p => new THREE.Vector2(...p)));
+        const ho = new THREE.Path(); ho.moveTo(40, 900); ho.lineTo(Dp - 40, 900); ho.lineTo(Dp - 40, 1380);
+        ho.bezierCurveTo(Dp - 220, 1430, Dp - 110, 1850, Dp - 230, 1850); ho.lineTo(40, 1850); ho.lineTo(40, 900); sh.holes.push(ho);
+        const fr = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: 20, bevelEnabled: false }), wh);
+        fr.rotation.y = Math.PI / 2; fr.position.set(TX1, 0, S); fr.castShadow = true; furn.add(fr); }   // u=0 at the wall, u=600 at the front
+      fb(TX1 + 3, F - 18, TX2 - 3, F, 900, 1860, wh);                          // front door over the niche zone
       fb(TX1 + 3, F - 18, TX2 - 3, F, 1872, TOP - 4, wh);                      // top cabinet door
-      fb(TX1, F - 20, TX1 + 18, S, 0, TOP, wh);                               // side panel at the door end
+      for (const [y0, y1] of [[1000, 1700], [2000, 2600]]) fb(TX2 - 40, F - 30, TX2 - 28, F - 18, y0, y1, champ);   // pull bars
+      for (const y of [360, 630, 890]) fb(TX1 + 150, F - 26, TX2 - 150, F - 18, y - 30, y - 18, champ);          // drawer pulls
       // wardrobe: 2 sections with full interiors, single leaves both hinged west
-      wardrobeRun(TX2, WX2, S, -1, TOP, ['double', 'shelves'], [1, 1]);
+      wardrobeRun(TX2, WX2, S, -1, TOP, ['double', 'shelves'], [1, 1], { shut: 0xd9cec0, carc: 0xe8e1d6 });
       fb((TX2 + WX2) / 2 - 3, F - 22, (TX2 + WX2) / 2 + 3, F - 18, 100, 2380, keep(mat(0x3a3a3c)));   // centre groove (as ref)
       // corner section: upper cabinet, lit oak niche with mirror, desk
       fb(WX2, F, E, S, 1700, TOP, carcR);
-      for (const [a, b] of [[WX2, (WX2 + E) / 2], [(WX2 + E) / 2, E]]) fb(a + 3, F - 18, b - 3, F, 1705, TOP - 4, wh);
+      for (const [a, b] of [[WX2, (WX2 + E) / 2], [(WX2 + E) / 2, E]]) { fb(a + 3, F - 18, b - 3, F, 1705, TOP - 4, wh); fb(a + 40, F - 26, b - 40, F - 18, 1720, 1732, champ); }   // lift pulls
       fb(WX2, S - 18, E, S, TOPD, 1700, oakR); fb(WX2, F, WX2 + 18, S, 0, 1700, wh);   // oak back + side
       fb(WX2 + 18, F + 20, E, F + 30, 1680, 1690, glow);                       // LED under the cabinet
-      fb(WX2 + 150, S - 26, E - 150, S - 18, 1000, 1600, champ);              // mirror frame
-      fb(WX2 + 170, S - 30, E - 170, S - 26, 1020, 1580, mirror);
+      fb(E - 14, DZ1 + 120, E - 8, DZ1 + 520, 900, 1520, champ);             // mirror on the wall above the desk, by the lamp
+      fb(E - 18, DZ1 + 140, E - 14, DZ1 + 500, 920, 1500, mirror);
       // desk top as an L: under the corner section + along the east wall, oak, rounded back lip
       fb(WX2 + 18, F, E, S, TOPD - 30, TOPD, oakR);
       fb(DX, DZ1, E, F, TOPD - 30, TOPD, oakR);
