@@ -870,15 +870,15 @@ function setLivingV2(on) {
 {
   const kk = (c, o = {}) => { const m = mat(c, { roughness: 0.5, ...o }); m.userData.keepColor = true; return m; };
   const DS = {   // dining joinery in the kitchen palette: light taupe, darker taupe, cream inside, champagne
-    frame: kk(0xd9cec0), frameDark: kk(0xa69888, { roughness: 0.55 }), base: kk(0xd9cec0),
+    frame: kk(0xa69888, { roughness: 0.55 }), frameDark: kk(0x7d7266, { roughness: 0.55 }), base: kk(0xa69888, { roughness: 0.55 }),   // kitchen dark taupe doors
     glass: kk(0xffffff, { transparent: true, opacity: 0.1, roughness: 0.05 }),
     shelf: kk(0xe8e1d6), back: kk(0xe8e1d6, { roughness: 0.8 }), panel: kk(0xe8e1d6),
     art: kk(0x2c2a28, { roughness: 0.3 }), bottle: kk(0x8c6b52, { roughness: 0.3 }),
     white: kk(0xf4f2ee, { roughness: 0.3 }), green: kk(0x5f7f3f), champ: kk(0xc8ae84, { metalness: 0.75, roughness: 0.3 }),
-    fluted: kk(0xffffff, { transparent: true, opacity: 0.72, roughness: 0.3 }),
+    fluted: kk(0xffffff, { transparent: true, opacity: 0.38, roughness: 0.2 }),   // smoked fluted glass, crockery reads through
   };
   DS.fluted.map = canvasTex(64, 16, (g, w, h) => { for (let x = 0; x < w; x += 8) { const gr = g.createLinearGradient(x, 0, x + 8, 0);
-    gr.addColorStop(0, '#d8d0c3'); gr.addColorStop(0.5, '#f6f2ea'); gr.addColorStop(1, '#d8d0c3'); g.fillStyle = gr; g.fillRect(x, 0, 8, h); } });
+    gr.addColorStop(0, '#4a4038'); gr.addColorStop(0.5, '#9a8c7c'); gr.addColorStop(1, '#4a4038'); g.fillStyle = gr; g.fillRect(x, 0, 8, h); } });
   DS.fluted.map.wrapS = THREE.RepeatWrapping; DS.fluted.map.repeat.set(8, 1);
   // sideboard + upper cabinets along a wall (axis 'x' = south wall, front -z; 'z' = bedroom 1 wall, front
   // -x). Base 0-850 with doors, darker counter, open decor band, then upper modules to the ceiling that
@@ -894,22 +894,27 @@ function setLivingV2(on) {
     put(u1, u2, 0, 12, BT + 30, UB, DS.frameDark);                              // darker back panel (decor band)
     put(u1, u2, D - 60, D - 50, UB - 8, UB, M.glow);                            // LED under the uppers
     const n = Math.max(1, Math.round((u2 - u1) / 520)), w = (u2 - u1) / n;
-    const types = ['fluted', 'solid', 'open'];
+    const types = ['fluted', 'open', 'fluted', 'solid'];
     let k = 0;
     for (let i = 0; i < n; i++) {
-      const a = u1 + i * w, b = a + w, t = types[(i + (axis === 'z' ? 1 : 0)) % 3];
+      const a = u1 + i * w, b = a + w, t = types[(i + (axis === 'z' ? 2 : 0)) % 4];
       put(a + 2, b - 2, D - 20, D, 90, BT - 5, DS.base);                         // base door
       put((a + b) / 2 - 80, (a + b) / 2 + 80, D, D + 6, BT - 40, BT - 28, DS.frameDark);   // finger grip
-      put(a, b, 0, D, UB, TOPC, DS.back);                                         // upper carcass (cream)
+      put(a, b, 0, 12, UB, TOPC, DS.back); put(a, b, 0, D, UB, UB + 18, DS.back); put(a, b, 0, D, TOPC - 18, TOPC, DS.back);   // hollow upper carcass (back, bottom, top)
       if (i) put(a - 9, a + 9, 0, D, UB, TOPC, DS.frame);                        // partitions
       if (t === 'open') {                                                         // open decor niche, darker edge
+        put(a + 9, b - 9, 0, 14, UB, TOPC, DS.frameDark);                         // darker back in the open niche
         put(a + 9, b - 9, 12, D, UB + 20, UB + 40, DS.frameDark); put(a + 9, b - 9, 12, D, 2180, 2198, DS.frameDark);
         put(a + 20, b - 20, D - 40, D - 30, 2160, 2170, M.glow); put(a + 20, b - 20, D - 40, D - 30, TOPC - 30, TOPC - 20, M.glow);
         const [x, z] = at((a + b) / 2, D / 2); cyl(x, UB + 40, z, 240, 60, W.vase[2]); cyl(x, 2198, z, 160, 70, DS.white);
       } else if (t === 'fluted') {                                                // lit fluted-glass door
         for (const y of [1900, 2450]) put(a + 12, b - 12, 15, D - 25, y, y + 12, DS.shelf);
         put(a + 20, b - 20, D - 40, D - 30, TOPC - 30, TOPC - 20, M.glow);
-        let kk2 = 0; for (const y of [UB, 1912, 2462]) for (let u = a + 80; u < b - 60; u += 110) { const [x, z] = at(u, D / 2); cyl(x, y, z, 150 + (kk2 % 2) * 60, 40, kk2++ % 3 ? DS.white : DS.bottle); }
+        put(a + 12, b - 12, 12, 20, UB, TOPC, kk(0x7d7266, { emissive: 0xffc98a, emissiveIntensity: 0.12 }));   // warm-lit darker back
+        for (const y of [UB + 20, 1912, 2462]) put(a + 20, b - 20, D - 40, D - 30, y + 470, y + 478, M.glow);   // light per shelf
+        for (let u = a + 50; u < b - 40; u += 34) { const [x, z] = at(u, 80); const p = new THREE.Mesh(new THREE.CylinderGeometry(120, 120, 10, 28), DS.white); p.rotation[axis === 'x' ? 'x' : 'z'] = Math.PI / 2; p.position.set(x, UB + 130, z); furn.add(p); }   // plates on edge
+        for (let u = a + 90; u < b - 60; u += 150) { const [x, z] = at(u, D / 2); cyl(x, 1912, z, 70, 90, DS.white); cyl(x, 1982, z, 60, 80, DS.white); }   // stacked bowls
+        for (let u = a + 70; u < b - 50; u += 100) { const [x, z] = at(u, D / 2); cyl(x, 2462, z, 90, 40, DS.white); cyl(x, 2462, z + (axis === 'x' ? -90 : 0), 160, 35, kk(0xe6eef0, { transparent: true, opacity: 0.6 })); }   // cups + glasses
         put(a + 3, b - 3, D - 4, D + 4, UB + 3, TOPC - 3, DS.fluted);
         put(a + 3, a + 20, D - 4, D + 6, UB + 3, TOPC - 3, DS.frame); put(b - 20, b - 3, D - 4, D + 6, UB + 3, TOPC - 3, DS.frame);
         put(b - 40, b - 28, D + 6, D + 14, UB + 100, UB + 500, DS.champ);
