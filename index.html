@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>13th Floor 3D</title>
 <style>
   body { margin: 0; overflow: hidden; background: #1b1d22; font-family: system-ui, sans-serif; }
@@ -2141,32 +2141,43 @@ function exitWalk() {
 const isTouch = matchMedia('(pointer: coarse)').matches || (navigator.maxTouchPoints > 0 && !matchMedia('(hover: hover)').matches);
 const joyEl = document.getElementById('joy'), joyKnob = document.getElementById('joyKnob');
 const joy = { x: 0, y: 0, id: null };
-const joyMove = e => {
+// Raw touch events (not pointer events): each finger is tracked by its identifier, the joystick finger
+// and the look finger never interfere, and preventDefault stops the browser scrolling/zooming.
+const joyMove = t => {
   const r = joyEl.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2, R = r.width / 2 - 25;
-  let dx = e.clientX - cx, dy = e.clientY - cy; const d = Math.hypot(dx, dy); if (d > R) { dx *= R / d; dy *= R / d; }
+  let dx = t.clientX - cx, dy = t.clientY - cy; const d = Math.hypot(dx, dy); if (d > R) { dx *= R / d; dy *= R / d; }
   joy.x = dx / R; joy.y = dy / R; joyKnob.style.transform = `translate(${dx}px, ${dy}px)`;
 };
-joyEl.addEventListener('pointerdown', e => { joy.id = e.pointerId; joyEl.setPointerCapture(e.pointerId); joyMove(e); });
-joyEl.addEventListener('pointermove', e => { if (e.pointerId === joy.id) joyMove(e); });
-const joyEnd = e => { if (e.pointerId !== joy.id) return; joy.id = null; joy.x = joy.y = 0; joyKnob.style.transform = ''; };
-joyEl.addEventListener('pointerup', joyEnd); joyEl.addEventListener('pointercancel', joyEnd);
+const joyReset = () => { joy.id = null; joy.x = joy.y = 0; joyKnob.style.transform = ''; };
+joyEl.addEventListener('touchstart', e => { e.preventDefault(); const t = e.changedTouches[0]; joy.id = t.identifier; joyMove(t); }, { passive: false });
+joyEl.addEventListener('touchmove', e => { e.preventDefault(); for (const t of e.changedTouches) if (t.identifier === joy.id) joyMove(t); }, { passive: false });
+for (const ev of ['touchend', 'touchcancel']) joyEl.addEventListener(ev, e => { for (const t of e.changedTouches) if (t.identifier === joy.id) joyReset(); });
 if (isTouch) document.getElementById('walkHintText').textContent = 'Left stick walks · drag to look around';
-const lastTouch = new Map(); let lastTap = 0;
-renderer.domElement.addEventListener('pointerdown', e => {
-  if (e.pointerType !== 'touch') return;
-  lastTouch.set(e.pointerId, [e.clientX, e.clientY]);
-  const now = performance.now();
-  if (!walking && now - lastTap < 300) renderer.domElement.dispatchEvent(new MouseEvent('dblclick', { clientX: e.clientX, clientY: e.clientY }));
-  lastTap = now;
-});
-renderer.domElement.addEventListener('pointermove', e => {
-  if (e.pointerType !== 'touch' || !walking || !lastTouch.has(e.pointerId)) return;
-  const [px, py] = lastTouch.get(e.pointerId); lastTouch.set(e.pointerId, [e.clientX, e.clientY]);
-  const eu = new THREE.Euler(0, 0, 0, 'YXZ').setFromQuaternion(camera.quaternion);
-  eu.y -= (e.clientX - px) * 0.005; eu.x = THREE.MathUtils.clamp(eu.x - (e.clientY - py) * 0.005, -1.4, 1.4);
-  camera.quaternion.setFromEuler(eu);
-});
-for (const ev of ['pointerup', 'pointercancel']) renderer.domElement.addEventListener(ev, e => lastTouch.delete(e.pointerId));
+const lookTouch = new Map(); let lastTap = 0;
+const cv = renderer.domElement;
+cv.addEventListener('touchstart', e => {
+  if (walking) e.preventDefault();
+  for (const t of e.changedTouches) lookTouch.set(t.identifier, [t.clientX, t.clientY]);
+  if (e.touches.length === 1) {
+    const now = performance.now(), t = e.changedTouches[0];
+    if (!walking && now - lastTap < 300) cv.dispatchEvent(new MouseEvent('dblclick', { clientX: t.clientX, clientY: t.clientY }));
+    lastTap = now;
+  }
+}, { passive: false });
+cv.addEventListener('touchmove', e => {
+  if (!walking) return;
+  e.preventDefault();
+  for (const t of e.changedTouches) {
+    const prev = lookTouch.get(t.identifier); if (!prev) continue;
+    lookTouch.set(t.identifier, [t.clientX, t.clientY]);
+    const eu = new THREE.Euler(0, 0, 0, 'YXZ').setFromQuaternion(camera.quaternion);
+    eu.y -= (t.clientX - prev[0]) * 0.005;
+    eu.x = THREE.MathUtils.clamp(eu.x - (t.clientY - prev[1]) * 0.005, -1.4, 1.4);
+    eu.z = 0;
+    camera.quaternion.setFromEuler(eu);
+  }
+}, { passive: false });
+for (const ev of ['touchend', 'touchcancel']) cv.addEventListener(ev, e => { for (const t of e.changedTouches) lookTouch.delete(t.identifier); });
 renderer.domElement.addEventListener('dblclick', e => {
   if (walking) return;
   const ray = new THREE.Raycaster();
@@ -2329,7 +2340,7 @@ composer.addPass(new EffectPass(camera,
 
 const clock = new THREE.Clock();
 renderer.setAnimationLoop(() => {
-  const dt = clock.getDelta();
+  const dt = Math.min(clock.getDelta(), 0.1);   // no big jumps after a stalled frame
   if (walking) {
     const f = (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0);
     const r = (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0);
