@@ -910,7 +910,7 @@ function setLivingV2(on) {
       } else if (t === 'fluted') {                                                // lit fluted-glass door
         for (const y of [1900, 2450]) put(a + 12, b - 12, 15, D - 25, y, y + 12, DS.shelf);
         put(a + 20, b - 20, D - 40, D - 30, TOPC - 30, TOPC - 20, M.glow);
-        put(a + 12, b - 12, 12, 20, UB, TOPC, kk(0x7d7266, { emissive: 0xffc98a, emissiveIntensity: 0.12 }));   // warm-lit darker back
+        put(a + 12, b - 12, 12, 20, UB, TOPC, kk(0x8e8274, { roughness: 0.8 }));   // matte darker-taupe back, lit only by the shelf LEDs
         for (const y of [UB + 20, 1912, 2462]) put(a + 20, b - 20, D - 40, D - 30, y + 470, y + 478, M.glow);   // light per shelf
         for (let u = a + 50; u < b - 40; u += 34) { const [x, z] = at(u, 80); const p = new THREE.Mesh(new THREE.CylinderGeometry(120, 120, 10, 28), DS.white); p.rotation[axis === 'x' ? 'x' : 'z'] = Math.PI / 2; p.position.set(x, UB + 130, z); furn.add(p); }   // plates on edge
         for (let u = a + 90; u < b - 60; u += 150) { const [x, z] = at(u, D / 2); cyl(x, 1912, z, 70, 90, DS.white); cyl(x, 1982, z, 60, 80, DS.white); }   // stacked bowls
