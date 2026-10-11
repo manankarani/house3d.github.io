@@ -1508,8 +1508,9 @@ wardrobeRun(7950, 10225, 4365, 1, 2880, ['long', 'double', 'shelves']);   // det
       for (const [a, b] of [[WX2, (WX2 + E) / 2], [(WX2 + E) / 2, E]]) { fb(a + 3, F - 18, b - 3, F, 1705, TOP - 4, wh); fb(a + 40, F - 26, b - 40, F - 18, 1720, 1732, champ); }   // lift pulls
       fb(WX2, S - 18, E, S, TOPD, 1700, oakR); fb(WX2, F, WX2 + 18, S, 0, 1700, wh);   // oak back + side
       fb(WX2 + 18, F + 20, E, F + 30, 1680, 1690, glow);                       // LED under the cabinet
-      fb(E - 14, DZ1 + 120, E - 8, DZ1 + 520, 900, 1520, champ);             // mirror on the wall above the desk, by the lamp
-      fb(E - 18, DZ1 + 140, E - 14, DZ1 + 500, 920, 1500, mirror);
+      fb(E - 14, DZ1 + 50, E - 8, F - 50, 830, 2250, champ);                 // tall dressing mirror, desk top to 2.25 m
+      fb(E - 18, DZ1 + 70, E - 14, F - 70, 850, 2230, mirror);
+      for (const z of [DZ1 + 58, F - 64]) fb(E - 22, z, E - 16, z + 6, 870, 2210, glow);   // vertical vanity lights
       // desk top as an L: under the corner section + along the east wall, oak, rounded back lip
       fb(WX2 + 18, F, E, S, TOPD - 30, TOPD, oakR);
       fb(DX, DZ1, E, F, TOPD - 30, TOPD, oakR);
@@ -1524,11 +1525,14 @@ wardrobeRun(7950, 10225, 4365, 1, 2880, ['long', 'double', 'shelves']);   // det
       let k3 = 0; for (let z = DZ1 + 320; z < DZ1 + 510; z += 45) cyl(E - 250, TOPD + 8, z, 60 + (k3 % 3) * 30, 16, keep(mat([0xb5582e, 0xd9a441, 0xe8d6c6][k3++ % 3], { roughness: 0.4 })));
       cyl(WX2 + 300, TOPD, S - 200, 180, 50, keep(mat(0xd9cfc0)));
       { const st = new THREE.Mesh(new THREE.CylinderGeometry(180, 160, 450, 32), keep(mat(0xe8dfd2, { roughness: 1 })));
-        st.position.set(DX + 60, 225, (DZ1 + F) / 2); st.castShadow = true; furn.add(st); }
+        st.position.set(E - 300, 225, S - 280); st.castShadow = true; furn.add(st); }   // parked in the corner under the desk
     }
     let k = 0;
     // --- queen bed, head on the east wall, no headboard
-    const BX1 = E - 2032, BX2 = E, BZ1 = 230, BZ2 = 1754, BZC = (BZ1 + BZ2) / 2;
+    const BX2 = E - 90, BX1 = BX2 - 2032, BZ1 = 175, BZ2 = 1699, BZC = (BZ1 + BZ2) / 2;   // 60 behind the curtain line only
+    { const hb = keep(mat(0xd9cec0, { roughness: 0.95 })), n = 7, cw = (BZ2 - BZ1 + 60) / n;   // channel-tufted headboard
+      for (let i = 0; i < n; i++) rbox(70, 950, cw - 6, E - 50, 725, BZ1 - 30 + cw * (i + 0.5), 25, hb);
+      fb(E - 20, BZ1 - 40, E, BZ2 + 40, 1196, 1206, keep(mat(0xc8ae84, { metalness: 0.75, roughness: 0.3 }))); }   // thin champagne cap
     fb(BX1 + 60, BZ1 + 60, BX2, BZ2 - 60, 0, 90, M.dark);
     fb(BX1, BZ1, BX2, BZ2, 90, 320, oak);
     rbox(BX2 - BX1 - 30, 230, BZ2 - BZ1 - 30, (BX1 + BX2) / 2 - 10, 440, BZC, 60, ivory);
@@ -1539,11 +1543,11 @@ wardrobeRun(7950, 10225, 4365, 1, 2880, ['long', 'double', 'shelves']);   // det
     for (const z of [BZ1 + 470, BZ2 - 470]) { const c = rbox(120, 380, 380, BX2 - 430, 760, z, 60, k++ % 2 ? clay : sage); c.rotation.z = 0.3; }
     // aisle-side floating shelf + wall lights + art on the east wall
     for (const z of [BZ1 + 60, BZ2 - 60]) {
-      fb(E - 30, z - 40, E, z + 40, 1150, 1250, champ);
-      cyl(E - 90, 1080, z, 140, 70, keep(mat(0xf5e6cf, { emissive: 0xffd8a0, emissiveIntensity: 1.3 })));
+      fb(E - 30, z - 40, E, z + 40, 1350, 1450, champ);
+      cyl(E - 90, 1280, z, 140, 70, keep(mat(0xf5e6cf, { emissive: 0xffd8a0, emissiveIntensity: 1.3 })));
     }
-    fb(E - 25, BZ1 + 200, E - 20, BZ2 - 200, 1300, 1950, champ);
-    fb(E - 30, BZ1 + 220, E - 25, BZ2 - 220, 1320, 1930, keep(mat(0xffffff, { map: canvasTex(256, 160, (g, w, h) => {
+    fb(E - 25, BZ1 + 200, E - 20, BZ2 - 200, 1560, 2210, champ);
+    fb(E - 30, BZ1 + 220, E - 25, BZ2 - 220, 1580, 2190, keep(mat(0xffffff, { map: canvasTex(256, 160, (g, w, h) => {
       const gr = g.createLinearGradient(0, 0, w, 0); gr.addColorStop(0, '#e9e1d4'); gr.addColorStop(1, '#cdbfa9'); g.fillStyle = gr; g.fillRect(0, 0, w, h);
       g.fillStyle = 'rgba(160,120,90,.55)'; g.beginPath(); g.arc(150, 85, 46, 0, 7); g.fill();
       g.strokeStyle = 'rgba(90,70,55,.6)'; g.lineWidth = 2; g.beginPath(); g.moveTo(30, 120); g.bezierCurveTo(90, 60, 170, 140, 230, 70); g.stroke();
