@@ -1405,7 +1405,7 @@ wardrobeRun(7950, 10225, 4365, 1, 2880, ['long', 'double', 'shelves'], [], { shu
       f3(X1 + 270, Z - 30, X1 + 282, Z - 18, 500, 1100, bronze); f3(X2 - 282, Z - 30, X2 - 270, Z - 18, 500, 1100, bronze);
       f3(X1 + 300, Z - 6, X2 - 300, Z, 0, 1250, lt2);                           // panel behind the headboard (lift-up access from above)
       f3(X1 + 10, Z - 25, X2 - 10, Z - 18, 1240, 1250, glow); }
-    window.setBedStorage = on => { behindG.visible = on; bedG.position.z = on ? -500 : 0; };
+    window.setBedStorage = on => { behindG.visible = on; bedG.position.z = on ? -500 : 0; window.deskCurve?.(!on); };
     // --- study wall (south, x 6975-8150): full-height unit in kitchen colours (light taupe + darker
     // taupe contrast). Ceiling-high cabinets with curved inner corners, a rounded lit open niche, darker
     // back panel with LED, and a darker desk top that curves down into a waterfall side at the bed.
@@ -1436,11 +1436,17 @@ wardrobeRun(7950, 10225, 4365, 1, 2880, ['long', 'double', 'shelves'], [], { shu
     // desk: darker top, waterfall curve down to the floor at the bed end, light-taupe drawer box
     const TY = 760, TT = 40, R = 120;
     fb(DX1, S - DD, DX2 - R, S, TY - TT, TY, dk);
+    const cv0 = furn.children.length;
     { const q = new THREE.Mesh(new THREE.CylinderGeometry(R, R, DD, 32, 1, false, Math.PI / 2, Math.PI / 2), dk);   // top-outer quadrant
       q.rotation.x = Math.PI / 2; q.position.set(DX2 - R, TY - R, S - DD / 2); furn.add(q);   // quarter round
       const qi = new THREE.Mesh(new THREE.CylinderGeometry(R - TT, R - TT, DD + 2, 32, 1, false, Math.PI / 2, Math.PI / 2), keep(mat(0xe3ddd3)));
       qi.rotation.x = Math.PI / 2; qi.position.set(DX2 - R - 0.5, TY - R, S - DD / 2); furn.add(qi); }
     fb(DX2 - TT, S - DD, DX2, S, 0, TY - R, dk);                                 // waterfall side to the floor
+    // curved end (default) vs. straight top running into the storage wall (storage-behind-bed option)
+    const curveG = new THREE.Group(); furn.children.slice(cv0).forEach(c => curveG.add(c)); furn.add(curveG);
+    const straightG = new THREE.Group(); straightG.visible = false; furn.add(straightG);
+    box(R + 25, TT, DD, DX2 - R + (R + 25) / 2, TY - TT / 2, S - DD / 2, dk, straightG);
+    window.deskCurve = on => { curveG.visible = on; straightG.visible = !on; };
     fb(DX1, S - DD + 30, DX1 + 460, S, 380, TY - TT, lt);                        // drawer box
     fb(DX1 + 3, S - DD + 12, DX1 + 457, S - DD + 30, 390, TY - TT - 6, lt);
     fb(DX1 + 120, S - DD + 6, DX1 + 340, S - DD + 12, TY - TT - 30, TY - TT - 18, dk);   // finger grip
