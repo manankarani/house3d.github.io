@@ -761,12 +761,11 @@ livingV2.visible = false;
   // Inside on the back (east) wall, over a white drawer base: Jain mandir (white arch, backlit jali,
   // marble murti) and Devi mandir (arch with red-gold backdrop, chunri, brass diyas). You face east.
   { const X1 = 4620, X2 = 5375, Z1 = 75, Z2 = 1000, TOPY = 2700, TOPF = 2880;
-    const bronze = kc(0x6b5a46, 0.35); bronze.metalness = 0.6;
-    const glassM = kc(0xe7e2d8, 0.05); glassM.transparent = true; glassM.opacity = 0.22;
+    const bronze = kc(0x1c1c1e, 0.35); bronze.metalness = 0.4;   // slim matte-black frame
+    const glassM = kc(0x9a948c, 0.05); glassM.transparent = true; glassM.opacity = 0.3; glassM.metalness = 0.25;   // soft smoked-grey glass   // warm bronze-tinted glass
     const wht = kc(0xf4f1ec, 0.4), oakF = kc(0xc39a6b, 0.5), marble = kc(0xf7f5f0, 0.25), gold = kc(0xc9a45c, 0.3); gold.metalness = 0.8;
     // platform + ceiling
     f2(X1 + 20, Z1, X2, Z2 - 20, 0, 60, oakF);
-    for (let z = Z1 + 60; z < Z2 - 40; z += 120) f2(X1 + 22, z, X2, z + 3, 60, 61, kc(0xa98258));   // plank lines
     f2(X1 + 20, Z1, X2, Z2 - 20, TOPY, TOPY + 20, DK);
     for (const [x, z] of [[4850, 300], [4850, 780], [5150, 540]]) f2(x - 35, z - 35, x + 35, z + 35, TOPY - 3, TOPY, M.glow);
     f2(X1 - 20, Z1, X2, Z2 + 20, TOPY + 20, TOPF, DK);                          // fascia to the false ceiling
@@ -823,6 +822,43 @@ livingV2.visible = false;
       const cr = new THREE.Mesh(new THREE.ConeGeometry(26, 50, 12), gold); cr.position.set(X2 - 85, NB + 395, zD); G.add(cr); }
     for (const dz of [-130, 130]) { c2(BX + 60, 790, zD + dz, 25, 35, gold); const f = new THREE.Mesh(new THREE.SphereGeometry(12, 10, 8), kc(0xffd27a)); f.material.emissive = new THREE.Color(0xffb040); f.material.emissiveIntensity = 2; f.position.set(BX + 60, 835, zD + dz); G.add(f); }
     f2(BX + 20, ZM - 150, BX + 220, ZM + 150, 790, 800, gold);                  // puja thali on the ledge
+    // ---- richer finish: gold-edged arches, marble pillars with gold capitals, stepped shikhars,
+    // mandala ceiling with a ring chandelier, marble floor with gold inlay, hanging brass bells
+    const goldP = kc(0xd4b06a, 0.18); goldP.metalness = 0.9;
+    for (const c of [W * 0.27, W * 0.73]) {                                       // gold arch edging (ring shape)
+      const o = new THREE.Shape(), r2 = R + 28;
+      o.moveTo(c - r2, NB); o.lineTo(c + r2, NB); o.lineTo(c + r2, NT - R); o.absarc(c, NT - R, r2, 0, Math.PI, false); o.lineTo(c - r2, NB);
+      const h = new THREE.Path(); h.moveTo(c - R, NB); h.lineTo(c + R, NB); h.lineTo(c + R, NT - R); h.absarc(c, NT - R, R, 0, Math.PI, false); h.lineTo(c - R, NB); o.holes.push(h);
+      const m = new THREE.Mesh(new THREE.ExtrudeGeometry(o, { depth: 8, bevelEnabled: false }), goldP);
+      m.rotation.y = Math.PI / 2; m.position.set(PX - 8, 0, Z2 - 40); G.add(m);
+      // stepped shikhar crown above the arch: marble tiers with gold bands + gold kalash
+      const zc = Z2 - 40 - c;
+      [[300, 0, 70], [220, 70, 140], [140, 140, 205], [70, 205, 260]].forEach(([w, a, b], k) => {
+        f2(PX - 30 - k * 4, zc - w / 2, PX, zc + w / 2, NT + 60 + a, NT + 60 + b, marble);
+        f2(PX - 34 - k * 4, zc - w / 2 - 4, PX - 26 - k * 4, zc + w / 2 + 4, NT + 60 + a, NT + 64 + a, goldP); });
+      c2(PX - 40, NT + 320, zc, 70, 30, goldP);
+    }
+    for (const z of [Z1 + 60, ZM, Z2 - 70]) {                                    // marble pillars with gold capitals/bases
+      c2(PX - 40, NB, z, NT - NB, 34, marble, 34);
+      f2(PX - 85, z - 45, PX + 5, z + 45, NB, NB + 40, goldP); f2(PX - 85, z - 45, PX + 5, z + 45, NT - 40, NT, goldP); }
+    // white marble floor with a gold inlay border (over the platform)
+    f2(X1 + 20, Z1, X2, Z2 - 20, 60, 64, marble);
+    f2(X1 + 80, Z1 + 60, X2 - 60, Z1 + 72, 64, 65, goldP); f2(X1 + 80, Z2 - 92, X2 - 60, Z2 - 80, 64, 65, goldP);
+    f2(X1 + 80, Z1 + 60, X1 + 92, Z2 - 80, 64, 65, goldP);
+    // mandala ceiling + ring chandelier
+    f2(X1 + 20, Z1, X2, Z2 - 20, TOPY - 6, TOPY, kc(0xffffff, 0.4));
+    { const cm = G.children[G.children.length - 1]; cm.material = kc(0xffffff, 0.4); cm.material.map = canvasTex(256, 256, (g, w, h) => {
+        g.fillStyle = '#f2ece2'; g.fillRect(0, 0, w, h); g.strokeStyle = '#c9a45c'; g.lineWidth = 2; const cx = w / 2, cy = h / 2;
+        for (let r = 20; r < 120; r += 16) { g.beginPath(); g.arc(cx, cy, r, 0, 7); g.stroke(); }
+        for (let k = 0; k < 16; k++) { const a = k / 16 * Math.PI * 2; g.beginPath(); g.ellipse(cx + Math.cos(a) * 70, cy + Math.sin(a) * 70, 26, 10, a, 0, 7); g.stroke(); } }); }
+    { const ring = new THREE.Mesh(new THREE.TorusGeometry(180, 14, 12, 48), kc(0xfff4dc)); ring.material.emissive = new THREE.Color(0xffd9a0); ring.material.emissiveIntensity = 1.8;
+      ring.rotation.x = Math.PI / 2; ring.position.set((X1 + X2) / 2 + 40, 2380, ZM); G.add(ring);
+      const ring2 = ring.clone(); ring2.scale.setScalar(0.62); ring2.position.y = 2290; G.add(ring2);
+      for (const a of [0, 2.1, 4.2]) f2((X1 + X2) / 2 + 40 + Math.cos(a) * 180 - 2, ZM + Math.sin(a) * 180 - 2, (X1 + X2) / 2 + 42 + Math.cos(a) * 180, ZM + Math.sin(a) * 180, 2380, TOPY, goldP); }
+    for (const z of [Z1 + 160, Z2 - 170]) { f2(PX - 152, z - 2, PX - 148, z + 2, 2250, TOPY, goldP);   // hanging brass bells
+      const b = new THREE.Mesh(new THREE.SphereGeometry(45, 16, 12, 0, Math.PI * 2, 0, Math.PI / 1.6), goldP); b.position.set(PX - 150, 2210, z); G.add(b); }
+    // gold trim lines on the drawer fronts
+    for (const y of [400, 730]) f2(BX - 16, Z1 + 40, BX - 14, Z2 - 50, y - 6, y - 2, goldP);
     for (const z of [zJ, zD]) f2(PX - 3, z - R + 20, PX, z + R - 20, NT + 30, NT + 40, M.glow);   // light over each arch
   }
   // --- recliner (same place as v1, backed onto the low storage), softened: rounded body, pillow back, plump arms
