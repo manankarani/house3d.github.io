@@ -894,23 +894,22 @@ function setLivingV2(on) {
     put(u1, u2, 0, 12, BT + 30, UB, DS.frameDark);                              // darker back panel (decor band)
     put(u1, u2, D - 60, D - 50, UB - 8, UB, M.glow);                            // LED under the uppers
     const n = Math.max(1, Math.round((u2 - u1) / 520)), w = (u2 - u1) / n;
-    const types = ['fluted', 'open', 'fluted', 'solid'];
+    const types = ['solid', 'solid', 'fluted', 'solid', 'solid'];   // one fluted-glass door, centred
     let k = 0;
     for (let i = 0; i < n; i++) {
-      const a = u1 + i * w, b = a + w, t = types[(i + (axis === 'z' ? 2 : 0)) % 4];
+      const a = u1 + i * w, b = a + w, t = axis === 'z' ? 'solid' : types[i % types.length];
       put(a + 2, b - 2, D - 20, D, 90, BT - 5, DS.base);                         // base door
       put((a + b) / 2 - 80, (a + b) / 2 + 80, D, D + 6, BT - 40, BT - 28, DS.frameDark);   // finger grip
       put(a, b, 0, 12, UB, TOPC, DS.back); put(a, b, 0, D, UB, UB + 18, DS.back); put(a, b, 0, D, TOPC - 18, TOPC, DS.back);   // hollow upper carcass (back, bottom, top)
       if (i) put(a - 9, a + 9, 0, D, UB, TOPC, DS.frame);                        // partitions
       if (t === 'open') {                                                         // open decor niche, darker edge
-        put(a + 9, b - 9, 0, 14, UB, TOPC, DS.frameDark);                         // darker back in the open niche
         put(a + 9, b - 9, 12, D, UB + 20, UB + 40, DS.frameDark); put(a + 9, b - 9, 12, D, 2180, 2198, DS.frameDark);
         put(a + 20, b - 20, D - 40, D - 30, 2160, 2170, M.glow); put(a + 20, b - 20, D - 40, D - 30, TOPC - 30, TOPC - 20, M.glow);
         const [x, z] = at((a + b) / 2, D / 2); cyl(x, UB + 40, z, 240, 60, W.vase[2]); cyl(x, 2198, z, 160, 70, DS.white);
       } else if (t === 'fluted') {                                                // lit fluted-glass door
         for (const y of [1900, 2450]) put(a + 12, b - 12, 15, D - 25, y, y + 12, DS.shelf);
         put(a + 20, b - 20, D - 40, D - 30, TOPC - 30, TOPC - 20, M.glow);
-        put(a + 12, b - 12, 12, 20, UB, TOPC, kk(0x8e8274, { roughness: 0.8 }));   // matte darker-taupe back, lit only by the shelf LEDs
+        put(a + 12, b - 12, 12, 20, UB, TOPC, kk(0xefe9df, { roughness: 0.8 }));   // light cream inside
         for (const y of [UB + 20, 1912, 2462]) put(a + 20, b - 20, D - 40, D - 30, y + 470, y + 478, M.glow);   // light per shelf
         for (let u = a + 50; u < b - 40; u += 34) { const [x, z] = at(u, 80); const p = new THREE.Mesh(new THREE.CylinderGeometry(120, 120, 10, 28), DS.white); p.rotation[axis === 'x' ? 'x' : 'z'] = Math.PI / 2; p.position.set(x, UB + 130, z); furn.add(p); }   // plates on edge
         for (let u = a + 90; u < b - 60; u += 150) { const [x, z] = at(u, D / 2); cyl(x, 1912, z, 70, 90, DS.white); cyl(x, 1982, z, 60, 80, DS.white); }   // stacked bowls
