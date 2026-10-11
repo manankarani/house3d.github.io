@@ -1393,13 +1393,13 @@ wardrobe(7950, 10225, 4365, 1, 2880, 2);                // top wall: 5 bays, lit
   }
 
   // Bedroom 2 (inner x 8075-11092 = 3017, z 75-2945 = 2870; pillar 152 deep on the west wall z 75-1599;
-  // door in the south wall x 8100-8950, swings in against the west wall over z ~2185-2945; window north
-  // x 8680-10860). Mirrored to the west. Nothing in front of the window.
-  //  West wall:  clothes wardrobe z 75-1599 (600 deep, swallows the pillar), then the dressing unit
-  //              z 1610-2170 (table 450 deep + mirror door hiding a makeup cabinet), stopping before
-  //              the door swing.
-  //  South wall: queen bed 1524 x 2032, no headboard, head on the wall at x 9350-10874 (z 913-2945):
-  //              675 aisle to the wardrobe, 838 to the window, floating bedside shelves both sides.
+  // door in the south wall x 8100-8950, swings in against the west wall over z ~2185-2945; window north).
+  //  East wall:  queen bed head (1524 x 2032, no headboard) at x 9060-11092, z 230-1754 (155 to the
+  //              window glass for the blind), wall lights + art above, one floating shelf on the aisle side.
+  //  South wall: sliding wardrobe x 9000-11092, 600 deep (z 2345-2945), loft to the ceiling;
+  //              591 aisle to the bed, sliding so nothing swings into it.
+  //  West wall:  dressing unit z 1610-2170 (table, mirror door hiding a lit makeup cabinet, stool),
+  //              before the door swing; 833 clear strip along the pillar to the window.
   {
     const keep = m => { m.userData.keepColor = true; return m; };
     const oat = keep(mat(0xe8dfd2, { roughness: 0.7 })), oak = keep(mat(0xc8a882, { roughness: 0.55 }));
@@ -1408,69 +1408,65 @@ wardrobe(7950, 10225, 4365, 1, 2880, 2);                // top wall: 5 bays, lit
     const sage = keep(mat(0xb3bca6, { roughness: 1 })), clay = keep(mat(0xcf9a7c, { roughness: 0.9 }));
     const mirror = keep(mat(0xe6eef0, { metalness: 0.9, roughness: 0.04 }));
     const glow = keep(mat(0xfff1dc, { emissive: 0xffd9a0, emissiveIntensity: 2 }));
-    const W = 8075, TOP = 2980;
-    // --- clothes wardrobe (west wall z 75-1599): 3 hinged doors + loft, oak bar pulls, recessed plinth
-    const WF = W + 600, WZ1 = 75, WZ2 = 1599;
-    fb(W, WZ1, WF - 40, WZ2, 0, 80, M.dark); fb(W, WZ1, WF, WZ2, 80, TOP, body);
-    const nd = 3, dw = (WZ2 - WZ1) / nd;
-    for (let i = 0; i < nd; i++) {
-      const a = WZ1 + i * dw + 2, b = a + dw - 4;
-      fb(WF, a, WF + 18, b, 90, 2380, oat);                                   // door
-      fb(WF, a, WF + 18, b, 2400, TOP - 4, oat);                              // loft door
-      const pz = i === 1 ? a + 40 : b - 40;
-      fb(WF + 18, pz - 6, WF + 34, pz + 6, 800, 1700, oak);                   // long oak pull
+    const W = 8075, E = 11092, S = 2945, TOP = 2980;
+    // --- sliding wardrobe on the south wall
+    const WX1 = 9000, WZ = S - 600;
+    fb(WX1, WZ + 40, E, S, 0, 80, M.dark); fb(WX1, WZ, E, S, 80, TOP, body);
+    const np = 3, pw = (E - WX1) / np;
+    for (let i = 0; i < np; i++) {
+      const a = WX1 + i * pw - (i ? 15 : 0), b = WX1 + (i + 1) * pw, zf = WZ - (i % 2 ? 18 : 40);   // two tracks, panels overlap
+      fb(a, zf, b, zf + 20, 90, 2380, oat);
+      fb(i % 2 ? a + 30 : b - 42, zf - 14, (i % 2 ? a + 30 : b - 42) + 12, zf, 800, 1800, oak);   // long recessed pull
     }
-    fb(WF - 2, WZ1, WF, WZ2, 2380, 2400, M.dark);                             // shadow line under the loft
-    // --- dressing unit (west wall z 1610-2170): floating table, stool, full-height mirror door that
-    // swings open (Doors switch) onto makeup shelves with a warm light
+    fb(WX1, WZ - 42, E, WZ, 2380, 2400, M.dark);                               // top track
+    for (let i = 0; i < 4; i++) fb(WX1 + i * (E - WX1) / 4 + 2, WZ - 18, WX1 + (i + 1) * (E - WX1) / 4 - 2, WZ, 2400, TOP - 4, oat);   // loft doors
+    // --- dressing unit on the west wall (z 1610-2170)
     const DZ1 = 1610, DZ2 = 2170, DT = W + 450;
-    fb(W, DZ1, DT, DZ2, 700, 740, oak);                                       // table top
-    fb(W, DZ1 + 10, DT - 10, DZ2 - 10, 560, 700, oat);                        // 2 slim drawers
+    fb(W, DZ1, DT, DZ2, 700, 740, oak);
+    fb(W, DZ1 + 10, DT - 10, DZ2 - 10, 560, 700, oat);
     fb(DT - 10, (DZ1 + DZ2) / 2 - 2, DT, (DZ1 + DZ2) / 2 + 2, 570, 690, M.dark);
     for (const z of [DZ1 + 120, DZ2 - 120]) fb(DT - 6, z - 50, DT, z + 50, 650, 660, champ);
-    const MC = W + 180;                                                         // makeup cabinet 180 deep
+    const MC = W + 180;
     fb(W, DZ1, MC, DZ2, 900, 2380, body);
-    for (const y of [1150, 1450, 1750, 2050]) fb(W + 10, DZ1 + 10, MC - 10, DZ2 - 10, y, y + 12, ivory);   // glass-edge shelves
-    fb(MC - 12, DZ1 + 15, MC - 6, DZ2 - 15, 2360, 2366, glow);                // cabinet light
+    for (const y of [1150, 1450, 1750, 2050]) fb(W + 10, DZ1 + 10, MC - 10, DZ2 - 10, y, y + 12, ivory);
+    fb(MC - 12, DZ1 + 15, MC - 6, DZ2 - 15, 2360, 2366, glow);
     const pal = [0xb5582e, 0xd9a441, 0xe8d6c6, 0x6b3b3b, 0xc9a7a0, 0x2b2b2b];
     let k = 0;
-    for (const y of [1162, 1462, 1762]) for (let z = DZ1 + 60; z < DZ2 - 60; z += 70) cyl(W + 90, y, z, 80 + (k % 3) * 40, 22, keep(mat(pal[k++ % pal.length], { roughness: 0.4 })));   // bottles & jars
-    const md = new THREE.Group(); md.position.set(MC, 0, DZ1 + 5); furn.add(md);   // mirror door, hinged at DZ1
+    for (const y of [1162, 1462, 1762]) for (let z = DZ1 + 60; z < DZ2 - 60; z += 70) cyl(W + 90, y, z, 80 + (k % 3) * 40, 22, keep(mat(pal[k++ % pal.length], { roughness: 0.4 })));
+    const md = new THREE.Group(); md.position.set(MC, 0, DZ1 + 5); furn.add(md);
     box(18, 1470, DZ2 - DZ1 - 10, 9, 1640, (DZ2 - DZ1 - 10) / 2, oat, md);
     box(4, 1430, DZ2 - DZ1 - 40, 20, 1640, (DZ2 - DZ1 - 10) / 2, mirror, md);
-    box(6, 1470, 6, 21, 1640, DZ2 - DZ1 - 30, glow, md);                       // edge-lit mirror strip
+    box(6, 1470, 6, 21, 1640, DZ2 - DZ1 - 30, glow, md);
     doors.push({ leaf: md, swing: 1 });
-    fb(W, DZ1 - 10, DT + 40, DZ1, 0, 2380, oat); fb(W, DZ2, DT + 40, DZ2 + 10, 0, 2380, oat);   // side fins frame the niche
+    fb(W, DZ1 - 10, DT + 40, DZ1, 0, 2380, oat); fb(W, DZ2, DT + 40, DZ2 + 10, 0, 2380, oat);
     { const st = new THREE.Mesh(new THREE.CylinderGeometry(190, 170, 430, 32), keep(mat(0xe2d6c4, { roughness: 1 })));
-      st.position.set(DT + 280, 215, (DZ1 + DZ2) / 2); st.castShadow = true; furn.add(st); }   // boucle stool
-    // --- queen bed 1524 x 2032, no headboard: low oak platform, mattress, layered bedding
-    const BX1 = 9350, BX2 = 10874, BZ1 = 913, BZ2 = 2945;
-    fb(BX1 + 60, BZ1 + 60, BX2 - 60, BZ2, 0, 90, M.dark);                      // recessed plinth
-    fb(BX1, BZ1, BX2, BZ2, 90, 320, oak);                                       // platform
-    rbox(BX2 - BX1 - 30, 230, BZ2 - BZ1 - 30, (BX1 + BX2) / 2, 440, (BZ1 + BZ2) / 2 - 10, 60, ivory);   // mattress
-    rbox(BX2 - BX1 + 50, 60, 1450, (BX1 + BX2) / 2, 575, BZ1 + 725, 25, linenM);   // duvet
-    for (const x of [BX1 - 10, BX2 + 10]) rbox(30, 200, 1450, x, 480, BZ1 + 725, 10, linenM);
-    rbox(BX2 - BX1 + 60, 30, 480, (BX1 + BX2) / 2, 615, BZ1 + 300, 12, sage);  // folded throw at the foot
-    for (const x of [BX1 + 380, BX2 - 380]) rbox(620, 160, 400, x, 640, BZ2 - 250, 70, ivory);   // pillows on the wall
-    for (const x of [BX1 + 470, BX2 - 470]) { const c = rbox(380, 380, 120, x, 760, BZ2 - 430, 60, k % 2 ? clay : sage); c.rotation.x = -0.3; k++; }
-    // floating bedside shelves + wall lights (no headboard; art above the bed instead)
-    for (const [x1, x2] of [[BX1 - 300, BX1 - 20], [BX2 + 20, 11092]]) {
-      fb(x1, BZ2 - 320, x2, BZ2, 540, 570, oak);
-      fb(x1, BZ2 - 300, x2, BZ2, 470, 540, oat);
-      const lx = (x1 + x2) / 2;
-      fb(lx - 40, BZ2 - 30, lx + 40, BZ2, 1150, 1250, champ);
-      cyl(lx, 1080, BZ2 - 90, 140, 70, keep(mat(0xf5e6cf, { emissive: 0xffd8a0, emissiveIntensity: 1.3 })));
+      st.position.set(DT + 260, 215, (DZ1 + DZ2) / 2); st.castShadow = true; furn.add(st); }
+    // --- queen bed, head on the east wall, no headboard
+    const BX1 = E - 2032, BX2 = E, BZ1 = 230, BZ2 = 1754, BZC = (BZ1 + BZ2) / 2;
+    fb(BX1 + 60, BZ1 + 60, BX2, BZ2 - 60, 0, 90, M.dark);
+    fb(BX1, BZ1, BX2, BZ2, 90, 320, oak);
+    rbox(BX2 - BX1 - 30, 230, BZ2 - BZ1 - 30, (BX1 + BX2) / 2 - 10, 440, BZC, 60, ivory);
+    rbox(1450, 60, BZ2 - BZ1 + 50, BX1 + 725, 575, BZC, 25, linenM);                   // duvet
+    for (const z of [BZ1 - 10, BZ2 + 10]) rbox(1450, 200, 30, BX1 + 725, 480, z, 10, linenM);
+    rbox(480, 30, BZ2 - BZ1 + 60, BX1 + 300, 615, BZC, 12, sage);                       // throw at the foot
+    for (const z of [BZ1 + 380, BZ2 - 380]) rbox(400, 160, 620, BX2 - 250, 640, z, 70, ivory);   // pillows
+    for (const z of [BZ1 + 470, BZ2 - 470]) { const c = rbox(120, 380, 380, BX2 - 430, 760, z, 60, k++ % 2 ? clay : sage); c.rotation.z = 0.3; }
+    // aisle-side floating shelf + wall lights + art on the east wall
+    fb(E - 300, BZ2 + 20, E, BZ2 + 320, 540, 570, oak); fb(E - 280, BZ2 + 20, E, BZ2 + 320, 470, 540, oat);
+    for (const z of [BZ1 + 60, BZ2 + 170]) {
+      fb(E - 30, z - 40, E, z + 40, 1150, 1250, champ);
+      cyl(E - 90, 1080, z, 140, 70, keep(mat(0xf5e6cf, { emissive: 0xffd8a0, emissiveIntensity: 1.3 })));
     }
-    fb(9550, BZ2 - 25, 10674, BZ2 - 20, 1300, 1950, champ);                    // thin frame
-    fb(9570, BZ2 - 30, 10654, BZ2 - 25, 1320, 1930, keep(mat(0xffffff, { map: canvasTex(256, 160, (g, w, h) => {
+    fb(E - 25, BZ1 + 200, E - 20, BZ2 - 200, 1300, 1950, champ);
+    fb(E - 30, BZ1 + 220, E - 25, BZ2 - 220, 1320, 1930, keep(mat(0xffffff, { map: canvasTex(256, 160, (g, w, h) => {
       const gr = g.createLinearGradient(0, 0, w, 0); gr.addColorStop(0, '#e9e1d4'); gr.addColorStop(1, '#cdbfa9'); g.fillStyle = gr; g.fillRect(0, 0, w, h);
       g.fillStyle = 'rgba(160,120,90,.55)'; g.beginPath(); g.arc(150, 85, 46, 0, 7); g.fill();
       g.strokeStyle = 'rgba(90,70,55,.6)'; g.lineWidth = 2; g.beginPath(); g.moveTo(30, 120); g.bezierCurveTo(90, 60, 170, 140, 230, 70); g.stroke();
     }) })));
-    // --- sheer curtain gathered at the east end (window left fully open), rug beside the bed
-    fb(10880, 95, 11060, 115, 200, 2860, keep(mat(0xfbf8f2, { transparent: true, opacity: 0.8, roughness: 1, side: THREE.DoubleSide })));
+    // --- sheer curtain gathered at the west end of the window, rug in the aisle
+    fb(8680, 95, 8880, 115, 200, 2860, keep(mat(0xfbf8f2, { transparent: true, opacity: 0.8, roughness: 1, side: THREE.DoubleSide })));
     fb(8680, 100, 11092, 120, 2860, 2880, M.dark);
-    fb(8700, 980, 9330, 2700, 50, 62, keep(mat(0xd9cdbb, { roughness: 1 })));
+    fb(9200, 1800, 10900, 2300, 50, 62, keep(mat(0xd9cdbb, { roughness: 1 })));
   }
 }
 
