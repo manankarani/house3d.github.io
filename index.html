@@ -1300,7 +1300,7 @@ function setKitchenFinish(k) {
 // Bedroom 2: integrated desk + bed + wardrobe unit, see the bedroom decor block
 
 // Bedroom 1: queen bed on the bottom wall, side tables, wardrobe on top wall, study desk
-wardrobeRun(7950, 10225, 4365, 1, 2880, ['long', 'double', 'shelves']);   // detailed wardrobe, north wall
+wardrobeRun(7950, 10225, 4365, 1, 2880, ['long', 'double', 'shelves'], [], { shut: 0xd9cec0, carc: 0xe8e1d6 });   // detailed wardrobe, north wall
 
 // ---------- Bedroom decor ----------
 {
@@ -1369,15 +1369,10 @@ wardrobeRun(7950, 10225, 4365, 1, 2880, ['long', 'double', 'shelves']);   // det
       g.strokeStyle = 'rgba(110,90,70,.35)'; g.lineWidth = 3; g.strokeRect(10, 10, w - 20, h - 20); });
     const rugM = keep(mat(0xffffff, { map: rugTexL, roughness: 1 }));
 
-    // --- statement headboard wall
-    fb(W0, S - 20, E0, S, 0, 2860, flute);                                         // walnut fluting, wall to wall
-    const P1 = 8140, P2 = 9840, PY0 = 380, PY1 = 2560;                             // velvet channel panel
-    fb(P1 - 24, S - 26, P2 + 24, S - 20, PY0 - 24, PY1 + 24, bronze);              // bronze frame
-    fb(P1, S - 24, P1 + 4, S - 20, PY0 - 60, PY1 + 60, glow); fb(P2 - 4, S - 24, P2, S - 20, PY0 - 60, PY1 + 60, glow);   // halo
-    fb(P1 - 20, S - 24, P2 + 20, S - 20, PY1 + 30, PY1 + 34, glow);
-    const nCh = 8, cw = (P2 - P1) / nCh;
-    for (let i = 0; i < nCh; i++) rbox(cw - 6, PY1 - PY0, 70, P1 + cw * (i + 0.5), (PY0 + PY1) / 2, S - 60, 28, i % 2 ? velvet : velvetD);
-    for (const x of [7300, 10050]) fb(x - 3, S - 23, x + 3, S - 20, 0, 2860, bronze);   // bronze inlay reveals in the fluting
+    // --- headboard wall: plain wall + channel-stitched light-taupe headboard (same as bedroom 2)
+    { const hb = keep(mat(0xd9cec0, { roughness: 0.95 })), n = 8, x1 = 8150, x2 = 9830, cw = (x2 - x1) / n;
+      for (let i = 0; i < n; i++) rbox(cw - 6, 950, 70, x1 + cw * (i + 0.5), 725, S - 45, 25, hb);
+      fb(x1 - 10, S - 20, x2 + 10, S, 1196, 1206, bronze); }
 
     // --- bed: recessed plinth, low upholstered base, thick mattress, layered bedding
     fb(8300, 6375, 9680, 8195, 0, 90, keep(mat(0x1d1a18)));
@@ -1392,8 +1387,8 @@ wardrobeRun(7950, 10225, 4365, 1, 2880, ['long', 'double', 'shelves']);   // det
 
     // --- window-side nightstand (150 clear of the window wall for the blind) + glass pendant
     const NX1 = 9800, NX2 = E0 - 150;
-    fb(NX1, S - 420, NX2, S - 40, 380, 600, walnut);                               // floating drawer box
-    fb(NX1 - 10, S - 430, NX2, S - 40, 600, 625, trav);                            // travertine top
+    fb(NX1, S - 420, NX2, S - 40, 380, 600, keep(mat(0xd9cec0, { roughness: 0.5 })));   // light-taupe drawer box
+    fb(NX1 - 10, S - 430, NX2, S - 40, 600, 625, keep(mat(0xa69888, { roughness: 0.55 })));   // darker top
     fb(NX1 - 4, S - 330, NX1, S - 130, 480, 495, bronze);                          // bronze pull
     fb(NX1 + 20, S - 360, NX1 + 180, S - 220, 625, 665, W.book[0]); cyl(NX1 + 120, 625, S - 120, 110, 30, keep(mat(0x2b2b2b)));
     { const PX = (NX1 + NX2) / 2, PZ = S - 240;
@@ -1401,40 +1396,72 @@ wardrobeRun(7950, 10225, 4365, 1, 2880, ['long', 'double', 'shelves']);   // det
       const cap = new THREE.Mesh(new THREE.CylinderGeometry(60, 60, 30, 24), bronze); cap.position.set(PX, 1665, PZ); furn.add(cap);
       const sh = new THREE.Mesh(new THREE.CylinderGeometry(80, 80, 240, 28), glass); sh.position.set(PX, 1530, PZ); furn.add(sh); }
 
-    // --- study side (west of the bed): walnut floating desk on your white sit-stand frame, lit niche,
-    // greige fluted-glass upper cabinet, corner shelf column with bronze edges
-    const DX1 = 7300, DX2 = 8140;
-    fb(W0, S - 340, DX1, S - 20, 100, 2400, greige);                               // shelf column carcass
-    for (const y of [700, 1150, 1600, 2050]) { fb(W0 + 15, S - 330, DX1 - 15, S - 20, y, y + 22, walnutL); fb(W0 + 15, S - 330, DX1 - 15, S - 325, y, y + 22, bronze); fb(W0 + 15, S - 60, DX1 - 15, S - 50, y - 8, y, glow); }
-    for (let k = 0; k < 5; k++) fb(W0 + 40 + k * 46, S - 260, W0 + 78 + k * 46, S - 60, 1172, 1400 - k * 12, W.book[k % 3]);
-    cyl(W0 + 160, 722, S - 180, 180, 55, W.vase[2]); cyl(W0 + 160, 1622, S - 180, 140, 70, W.vase[1]);
-    fb(DX1, S - 600, DX2, S - 20, 730, 760, walnut);                               // desk top
-    fb(DX1, S - 600, DX2, S - 596, 730, 760, bronze);                              // bronze front edge
-    fb(DX1 + 20, S - 580, DX2 - 20, S - 20, 600, 730, greige);                     // drawer band
-    fb(DX1 + 370, S - 586, DX1 + 470, S - 580, 660, 672, bronze);
-    for (const x of [DX1 + 110, DX2 - 110]) fb(x - 30, S - 330, x + 30, S - 270, 0, 600, keep(mat(0xf4f4f2)));   // sit-stand legs
-    fb(DX1, S - 360, DX2, S - 20, 1300, 1600, walnut);                             // lit niche box
-    fb(DX1 + 10, S - 345, DX2 - 10, S - 335, 1585, 1592, glow);
-    fb(DX1, S - 360, DX2, S - 20, 1600, 2400, keep(mat(0xe8e1d6)));             // upper cabinet carcass
-    for (const [a, b] of [[DX1, (DX1 + DX2) / 2], [(DX1 + DX2) / 2, DX2]]) {
-      fb(a + 3, S - 378, b - 3, S - 360, 1605, 2395, keep(mat(0xd9cec0, { roughness: 0.5 })));   // light-taupe door
-      const px = a === DX1 ? b - 40 : a + 28; fb(px, S - 390, px + 12, S - 378, 1650, 2050, bronze);   // champagne bar pull
+    // --- study wall (south, x 6975-8150): full-height unit in kitchen colours (light taupe + darker
+    // taupe contrast). Ceiling-high cabinets with curved inner corners, a rounded lit open niche, darker
+    // back panel with LED, and a darker desk top that curves down into a waterfall side at the bed.
+    const lt = keep(mat(0xd9cec0, { roughness: 0.5 })), dk = keep(mat(0xa69888, { roughness: 0.55 })), cr = keep(mat(0xe8e1d6));
+    const DX1 = W0, DX2 = 8150, DD = 550, CT = 2860, CB = 1550, NX = 7700;
+    // upper cabinets to the false ceiling (no dust ledge) + rounded open niche at the bed end
+    fb(DX1, S - 380, NX, S, CB, CT, cr);
+    const hw = (NX - DX1) / 2;
+    for (let i = 0; i < 2; i++) {
+      const a = DX1 + i * hw + 2, b = a + hw - 4, g = new THREE.Shape();
+      const w = b - a, r = 110, inner = i === 0 ? 'r' : 'l';            // curved bottom corner where the doors meet (ref)
+      g.moveTo(0, 0);
+      if (inner === 'l') { g.lineTo(w, 0); g.lineTo(w, CT - CB - 6); g.lineTo(0, CT - CB - 6); g.lineTo(0, r); g.absarc(r, r, r, Math.PI, 1.5 * Math.PI, false); }
+      else { g.lineTo(w - r, 0); g.absarc(w - r, r, r, 1.5 * Math.PI, 2 * Math.PI, false); g.lineTo(w, CT - CB - 6); g.lineTo(0, CT - CB - 6); }
+      const m = new THREE.Mesh(new THREE.ExtrudeGeometry(g, { depth: 18, bevelEnabled: false }), lt);
+      m.position.set(a, CB + 3, S - 398); furn.add(m);
     }
-    { // MacBook Pro 14" (≈313 x 221 x 16), space grey, open ~110°, facing you as you sit at the desk
+    fb(NX, S - 380, DX2, S, CB, CB + 25, dk); fb(NX, S - 380, DX2, S, CT - 25, CT, dk);   // niche shell, darker contrast
+    fb(DX2 - 25, S - 380, DX2, S, CB, CT, dk); fb(NX, S - 20, DX2, S, CB, CT, dk);
+    fb(NX, S - 380, NX + 20, S, CB, CT, lt);
+    fb(NX + 20, S - 360, DX2 - 25, S - 20, 2200, 2218, dk);                    // mid shelf
+    for (const y of [CB + 25, 2218]) fb(NX + 30, S - 370, DX2 - 30, S - 360, y + 600, y + 608, glow);
+    cyl(NX + 200, CB + 25, S - 180, 160, 50, keep(mat(0xefe9df))); fb(NX + 80, S - 300, NX + 380, S - 60, 2218, 2250, keep(mat(0x8c6b52)));
+    for (const z of [S - 380]) { const c = new THREE.Mesh(new THREE.CylinderGeometry(60, 60, CT - CB, 20, 1, false, 0, Math.PI / 2), lt); c.position.set(NX + 20, (CB + CT) / 2, z + 60); }
+    // darker back panel between desk and cabinets + LED under the cabinets
+    fb(DX1, S - 12, DX2, S, 760, CB, dk);
+    fb(DX1 + 20, S - 375, DX2 - 30, S - 365, CB - 8, CB, glow);
+    // desk: darker top, waterfall curve down to the floor at the bed end, light-taupe drawer box
+    const TY = 760, TT = 40, R = 120;
+    fb(DX1, S - DD, DX2 - R, S, TY - TT, TY, dk);
+    { const q = new THREE.Mesh(new THREE.CylinderGeometry(R, R, DD, 32, 1, false, 0, Math.PI / 2), dk);
+      q.rotation.x = Math.PI / 2; q.position.set(DX2 - R, TY - R, S - DD / 2); furn.add(q);   // quarter round
+      const qi = new THREE.Mesh(new THREE.CylinderGeometry(R - TT, R - TT, DD + 2, 32, 1, false, 0, Math.PI / 2), keep(mat(0xe3ddd3)));
+      qi.rotation.x = Math.PI / 2; qi.position.set(DX2 - R - 0.5, TY - R, S - DD / 2); furn.add(qi); }
+    fb(DX2 - TT, S - DD, DX2, S, 0, TY - R, dk);                                 // waterfall side to the floor
+    fb(DX1, S - DD + 30, DX1 + 460, S, 380, TY - TT, lt);                        // drawer box
+    fb(DX1 + 3, S - DD + 12, DX1 + 457, S - DD + 30, 390, TY - TT - 6, lt);
+    fb(DX1 + 120, S - DD + 6, DX1 + 340, S - DD + 12, TY - TT - 30, TY - TT - 18, dk);   // finger grip
+    fb(DX1 + 40, S - 120, DX1 + 70, S - 60, 1180, 1240, keep(mat(0x2a2a2c)));   // switch plate
+    { // MacBook Pro 14", open, facing you
       const alu = keep(mat(0x9a9ca0, { metalness: 0.8, roughness: 0.35 })), keys = keep(mat(0x1a1a1c, { roughness: 0.7 }));
-      const pad = keep(mat(0xa9abaf, { metalness: 0.5, roughness: 0.25 }));
       const scr = keep(mat(0x1b2a3a, { emissive: 0x3f6f9f, emissiveIntensity: 0.55, roughness: 0.1 }));
-      const MX = 7720, Z1 = S - 520, Z2 = Z1 + 221, Y = 760;
-      fb(MX - 156, Z1, MX + 156, Z2, Y, Y + 8, alu);                                // base
-      fb(MX - 135, Z1 + 105, MX + 135, Z2 - 18, Y + 8, Y + 9, keys);               // keyboard well
-      fb(MX - 55, Z1 + 12, MX + 55, Z1 + 82, Y + 8, Y + 8.5, pad);                 // trackpad
-      const lid = new THREE.Group(); lid.position.set(MX, Y + 8, Z2); lid.rotation.x = -0.35; furn.add(lid);   // hinge at the back, tilted back
-      box(313, 214, 6, 0, 107, 0, alu, lid);                                         // lid shell
-      box(296, 190, 1, 0, 110, -3.5, scr, lid);                                      // display
-      box(296, 10, 1, 0, 8, -3.5, keys, lid);                                        // bottom bezel
-      for (const x of [-120, 120]) fb(MX + x - 20, Z1 + 10, MX + x + 20, Z1 + 30, Y - 2, Y, keys);   // feet
+      const MX = 7500, Z1 = S - 470, Z2 = Z1 + 221, Y = TY;
+      fb(MX - 156, Z1, MX + 156, Z2, Y, Y + 8, alu); fb(MX - 135, Z1 + 105, MX + 135, Z2 - 18, Y + 8, Y + 9, keys);
+      const lid = new THREE.Group(); lid.position.set(MX, Y + 8, Z2); lid.rotation.x = -0.35; furn.add(lid);
+      box(313, 214, 6, 0, 107, 0, alu, lid); box(296, 190, 1, 0, 110, -3.5, scr, lid);
     }
-    cyl(DX2 - 140, 760, S - 460, 200, 18, bronze); cyl(DX2 - 140, 960, S - 460, 120, 70, glass);   // desk lamp
+    { const c = new THREE.Group(); c.position.set(DX1 + 250, TY + 150, S - 120); furn.add(c);   // small table clock
+      const f = new THREE.Mesh(new THREE.CylinderGeometry(110, 110, 40, 32), keep(mat(0x8c6b52))); f.rotation.x = Math.PI / 2; c.add(f);
+      const fc = new THREE.Mesh(new THREE.CylinderGeometry(95, 95, 42, 32), keep(mat(0xf6f3ee))); fc.rotation.x = Math.PI / 2; c.add(fc); }
+    cyl(DX2 - 260, TY, S - 150, 60, 30, keep(mat(0xd9b8a0)));
+    // --- west wall details (between wardrobe and toilet door): 6 in ledge, clock, frames
+    { const PXF = W0, LZ1 = 5150, LZ2 = 6050, LY = 1150;
+      fb(PXF, LZ1, PXF + 150, LZ2, LY, LY + 30, dk);
+      fb(PXF + 4, LZ1 + 10, PXF + 8, LZ2 - 10, LY - 8, LY, glow);
+      cyl(PXF + 75, LY + 30, LZ1 + 120, 220, 55, keep(mat(0xe6dfd4)));
+      for (let i = 0; i < 4; i++) fb(PXF + 30, LZ1 + 330 + i * 32, PXF + 130, LZ1 + 358 + i * 32, LY + 30, LY + 200 - i * 10, keep(mat([0xefe9df, 0x8c6b52, 0xd9cfc0, 0x2f2f33][i])));
+      { const p = new THREE.Mesh(new THREE.CylinderGeometry(70, 60, 110, 24), keep(mat(0x9a5b3c))); p.position.set(PXF + 75, LY + 85, LZ2 - 120); furn.add(p);
+        const l = new THREE.Mesh(new THREE.SphereGeometry(90, 12, 10), keep(mat(0x5d7d44))); l.scale.set(0.8, 1, 0.8); l.position.set(PXF + 75, LY + 220, LZ2 - 120); furn.add(l); }
+      const CZ = (LZ1 + LZ2) / 2, g = new THREE.Group(); g.position.set(PXF, 1900, CZ); g.rotation.z = -Math.PI / 2; furn.add(g);
+      const rim = new THREE.Mesh(new THREE.CylinderGeometry(190, 190, 30, 48), dk); rim.position.y = 15; g.add(rim);
+      const face = new THREE.Mesh(new THREE.CylinderGeometry(172, 172, 32, 48), keep(mat(0xf6f3ee))); face.position.y = 18; g.add(face);
+      for (let k = 0; k < 12; k++) { const t = new THREE.Mesh(new THREE.BoxGeometry(k % 3 ? 6 : 10, 4, k % 3 ? 18 : 30), bronze); const a = k / 12 * Math.PI * 2; t.position.set(Math.sin(a) * 150, 36, Math.cos(a) * 150); t.rotation.y = a; g.add(t); }
+      const hh = new THREE.Mesh(new THREE.BoxGeometry(8, 4, 95), bronze); hh.position.set(30, 38, 35); hh.rotation.y = 0.7; g.add(hh);
+      const mh = new THREE.Mesh(new THREE.BoxGeometry(6, 4, 140), bronze); mh.position.set(-45, 39, 50); mh.rotation.y = -0.75; g.add(mh);
+    }
 
     // --- layered window treatment: lit pelmet, sheer + heavy drapes at both ends
     fb(E0 - 180, 5150, E0, 8300, 2760, 2880, ivory);
