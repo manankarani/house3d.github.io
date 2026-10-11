@@ -868,52 +868,59 @@ function setLivingV2(on) {
 // of a softly lit centre panel with framed art; marble-top table on a brass sled base; tufted chairs
 // (charcoal). 2 + 2: the free ends leave the main-door path open and let the storage return east.
 {
-  const DS = {
-    frame: mat(0x6f655c, { roughness: 0.5 }), frameDark: mat(0x3a3531, { roughness: 0.4 }),
-    base: mat(0x857a70, { roughness: 0.5 }),
-    glass: mat(0xffffff, { transparent: true, opacity: 0.1, roughness: 0.05 }),
-    shelf: mat(0xe6f0ef, { transparent: true, opacity: 0.5, roughness: 0.1 }),
-    back: mat(0xe8dcc8, { roughness: 0.8 }),   // cabinet back: no backlight
-    panel: mat(0xeadbc2),
-    art: mat(0x2c2a28, { roughness: 0.3 }), bottle: mat(0x1f2326, { roughness: 0.2 }),
-    white: mat(0xf4f2ee, { roughness: 0.3 }), green: mat(0x5f7f3f),
+  const kk = (c, o = {}) => { const m = mat(c, { roughness: 0.5, ...o }); m.userData.keepColor = true; return m; };
+  const DS = {   // dining joinery in the kitchen palette: light taupe, darker taupe, cream inside, champagne
+    frame: kk(0xd9cec0), frameDark: kk(0xa69888, { roughness: 0.55 }), base: kk(0xd9cec0),
+    glass: kk(0xffffff, { transparent: true, opacity: 0.1, roughness: 0.05 }),
+    shelf: kk(0xe8e1d6), back: kk(0xe8e1d6, { roughness: 0.8 }), panel: kk(0xe8e1d6),
+    art: kk(0x2c2a28, { roughness: 0.3 }), bottle: kk(0x8c6b52, { roughness: 0.3 }),
+    white: kk(0xf4f2ee, { roughness: 0.3 }), green: kk(0x5f7f3f), champ: kk(0xc8ae84, { metalness: 0.75, roughness: 0.3 }),
+    fluted: kk(0xffffff, { transparent: true, opacity: 0.72, roughness: 0.3 }),
   };
-  // tall display cabinet along a wall: axis 'x' = along the south wall (front faces -z),
-  // axis 'z' = along the bedroom 1 wall (front faces -x). back = wall face coordinate.
+  DS.fluted.map = canvasTex(64, 16, (g, w, h) => { for (let x = 0; x < w; x += 8) { const gr = g.createLinearGradient(x, 0, x + 8, 0);
+    gr.addColorStop(0, '#d8d0c3'); gr.addColorStop(0.5, '#f6f2ea'); gr.addColorStop(1, '#d8d0c3'); g.fillStyle = gr; g.fillRect(x, 0, 8, h); } });
+  DS.fluted.map.wrapS = THREE.RepeatWrapping; DS.fluted.map.repeat.set(8, 1);
+  // sideboard + upper cabinets along a wall (axis 'x' = south wall, front -z; 'z' = bedroom 1 wall, front
+  // -x). Base 0-850 with doors, darker counter, open decor band, then upper modules to the ceiling that
+  // alternate fluted glass (lit), solid door and open niche with decor. Cream inside.
   function cabinet(axis, back, u1, u2, D = 350) {
     const put = (a1, a2, d1, d2, y0, y1, m) => axis === 'x'
       ? fb(a1, back - d2, a2, back - d1, y0, y1, m) : fb(back - d2, a1, back - d1, a2, y0, y1, m);
     const at = (u, d) => axis === 'x' ? [u, back - d] : [back - d, u];
-    put(u1, u1 + 30, 0, D, 0, 3000, DS.frame); put(u2 - 30, u2, 0, D, 0, 3000, DS.frame);   // sides
-    put(u1 + 30, u2 - 30, 0, D, 0, 60, DS.frameDark);                                       // plinth
-    put(u1 + 30, u2 - 30, 0, D - 20, 60, 750, DS.base);                                     // base carcass
-    const n = Math.max(1, Math.round((u2 - u1) / 550)), w = (u2 - u1 - 60) / n;
-    for (let i = 0; i < n; i++) {
-      const a = u1 + 30 + i * w;
-      put(a + 3, a + w - 3, D - 20, D, 70, 740, DS.base);                                   // base doors
-      put(a + w / 2 - 6, a + w / 2 + 6, D, D + 8, 560, 700, DS.frameDark);                  // pull
-      if (i) put(a - 8, a + 8, D - 25, D, 750, 2700, DS.frameDark);                         // mullion
-    }
-    put(u1 + 30, u2 - 30, 0, D, 2700, 3000, DS.frame);                                      // top
-    put(u1 + 30, u2 - 30, 0, 20, 750, 2700, DS.back);                                       // lit back
-    for (const y of [1250, 1750, 2250]) {
-      put(u1 + 30, u2 - 30, 20, D - 30, y, y + 12, DS.shelf);
-      put(u1 + 30, u2 - 30, D - 70, D - 50, y - 6, y, M.glow);
-    }
-    put(u1 + 30, u2 - 30, D - 70, D - 50, 2694, 2700, M.glow);
-    put(u1 + 30, u2 - 30, D - 12, D - 4, 750, 2700, DS.glass);                              // glass doors
-    // styled objects on each shelf
+    const BT = 850, UB = 1400, TOPC = 3000;
+    put(u1, u2, 0, D - 40, 0, 80, DS.frameDark);                                // recessed plinth
+    put(u1, u2, 0, D - 20, 80, BT, DS.back);                                    // base carcass
+    put(u1, u2, 0, D + 15, BT, BT + 30, DS.frameDark);                          // darker counter
+    put(u1, u2, 0, 12, BT + 30, UB, DS.frameDark);                              // darker back panel (decor band)
+    put(u1, u2, D - 60, D - 50, UB - 8, UB, M.glow);                            // LED under the uppers
+    const n = Math.max(1, Math.round((u2 - u1) / 520)), w = (u2 - u1) / n;
+    const types = ['fluted', 'solid', 'open'];
     let k = 0;
-    for (const y of [750, 1262, 1762, 2262]) {
-      for (let u = u1 + 110; u < u2 - 90; u += 190) {
-        const [x, z] = at(u, 170), t = (k++) % 5;
-        if (t === 0) for (let b = 0; b < 3; b++) { const [bx, bz] = at(u + b * 45 - 45, 170); cyl(bx, y, bz, 260, 22, DS.bottle); }
-        else if (t === 1) cyl(x, y, z, 180, 70, DS.white);
-        else if (t === 2) for (let b = 0; b < 5; b++) { const [bx, bz] = at(u + b * 28 - 56, 170); fb(bx - 12, bz - 90, bx + 12, bz + 90, y, y + 230 - b * 12, b % 2 ? DS.white : DS.frameDark); }
-        else if (t === 3) cyl(x, y, z, 240, 45, W.vase[2]);
-        // t === 4 left empty: breathing room
+    for (let i = 0; i < n; i++) {
+      const a = u1 + i * w, b = a + w, t = types[(i + (axis === 'z' ? 1 : 0)) % 3];
+      put(a + 2, b - 2, D - 20, D, 90, BT - 5, DS.base);                         // base door
+      put((a + b) / 2 - 80, (a + b) / 2 + 80, D, D + 6, BT - 40, BT - 28, DS.frameDark);   // finger grip
+      put(a, b, 0, D, UB, TOPC, DS.back);                                         // upper carcass (cream)
+      if (i) put(a - 9, a + 9, 0, D, UB, TOPC, DS.frame);                        // partitions
+      if (t === 'open') {                                                         // open decor niche, darker edge
+        put(a + 9, b - 9, 12, D, UB + 20, UB + 40, DS.frameDark); put(a + 9, b - 9, 12, D, 2180, 2198, DS.frameDark);
+        put(a + 20, b - 20, D - 40, D - 30, 2160, 2170, M.glow); put(a + 20, b - 20, D - 40, D - 30, TOPC - 30, TOPC - 20, M.glow);
+        const [x, z] = at((a + b) / 2, D / 2); cyl(x, UB + 40, z, 240, 60, W.vase[2]); cyl(x, 2198, z, 160, 70, DS.white);
+      } else if (t === 'fluted') {                                                // lit fluted-glass door
+        for (const y of [1900, 2450]) put(a + 12, b - 12, 15, D - 25, y, y + 12, DS.shelf);
+        put(a + 20, b - 20, D - 40, D - 30, TOPC - 30, TOPC - 20, M.glow);
+        let kk2 = 0; for (const y of [UB, 1912, 2462]) for (let u = a + 80; u < b - 60; u += 110) { const [x, z] = at(u, D / 2); cyl(x, y, z, 150 + (kk2 % 2) * 60, 40, kk2++ % 3 ? DS.white : DS.bottle); }
+        put(a + 3, b - 3, D - 4, D + 4, UB + 3, TOPC - 3, DS.fluted);
+        put(a + 3, a + 20, D - 4, D + 6, UB + 3, TOPC - 3, DS.frame); put(b - 20, b - 3, D - 4, D + 6, UB + 3, TOPC - 3, DS.frame);
+        put(b - 40, b - 28, D + 6, D + 14, UB + 100, UB + 500, DS.champ);
+      } else {                                                                    // solid door
+        put(a + 3, b - 3, D, D + 18, UB + 3, TOPC - 3, DS.base);
+        put(a + 28, a + 40, D + 18, D + 26, UB + 100, UB + 500, DS.champ);
       }
+      k++;
     }
+    // decor on the counter
+    for (let u = u1 + 150; u < u2 - 100; u += 420) { const [x, z] = at(u, D / 2 + 20); if ((u / 420 | 0) % 2) cyl(x, BT + 30, z, 200, 50, W.vase[1]); else put(u - 90, u + 90, 60, D - 40, BT + 30, BT + 70, W.book[0]); }
   }
   // One continuous L: glass display along the dining wall (350 deep) turning up the bedroom 1 wall
   // (500 deep) — corner display module, then the mandir as the L's end by the passage. Same plinth,
@@ -922,9 +929,10 @@ function setLivingV2(on) {
   { // drawers over the arm's base (front z 5605): by the main door keys/masks + vented shoe drawers;
     // past the table: office-bag drawers and a vented drawer for worn running kit
     const vent = mat(0xffffff, { roughness: 0.7, map: canvasTex(128, 16, (g, w, h) => {
-      g.fillStyle = '#857a70'; g.fillRect(0, 0, w, h); g.fillStyle = '#4a433d'; for (let x = 6; x < w; x += 12) g.fillRect(x, 0, 3, h); }) });
+      g.fillStyle = '#d9cec0'; g.fillRect(0, 0, w, h); g.fillStyle = '#b7aa9a'; for (let x = 6; x < w; x += 12) g.fillRect(x, 0, 3, h); }) });
+    vent.userData.keepColor = true;
     vent.map.wrapS = THREE.RepeatWrapping; vent.map.repeat.set(4, 1);
-    const dr = (x1, x2, y0, y1, m) => { fb(x1 + 3, 5587, x2 - 3, 5605, y0, y1, m); fb((x1 + x2) / 2 - 90, 5581, (x1 + x2) / 2 + 90, 5587, y1 - 40, y1 - 30, DS.frameDark); };
+    const dr = (x1, x2, y0, y1, m) => { fb(x1 + 3, 5584, x2 - 3, 5606, Math.max(y0, 90), Math.min(y1, 845), m); fb((x1 + x2) / 2 - 90, 5578, (x1 + x2) / 2 + 90, 5584, Math.min(y1, 845) - 40, Math.min(y1, 845) - 28, DS.frameDark); };   // flush with the base fronts
     dr(3865, 4230, 600, 740, DS.base);                                    // keys / masks / wallet (felt tray)
     dr(3865, 4230, 330, 590, vent); dr(3865, 4230, 70, 320, vent);        // shoe drawers, vented
     dr(5060, 5630, 405, 740, vent);                                       // worn running kit, vented
@@ -1047,7 +1055,7 @@ function setLivingV2(on) {
       g.fillStyle = gr; g.fillRect(x, 0, 32, h);
     }
   }) });
-  const charcoal = tuft('#6a5a4d', '#54463b');   // mocha boucle, channel-stitched
+  const charcoal = tuft('#cdbfae', '#b4a593');   // light-taupe boucle, channel-stitched (kitchen family)
   const legMat = mat(0x2a2522);
   function tuftedChair(x, z, rot, fab) {
     const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = rot; furn.add(g);
