@@ -1466,61 +1466,85 @@ wardrobeRun(7950, 10225, 4365, 1, 2880, ['long', 'double', 'shelves']);   // det
     const mirror = keep(mat(0xe6eef0, { metalness: 0.9, roughness: 0.04 }));
     const glow = keep(mat(0xfff1dc, { emissive: 0xffd9a0, emissiveIntensity: 2 }));
     const W = 8075, E = 11092, S = 2945, TOP = 2980;
-    // --- Corner set exactly as the reference, with the desk as a dressing unit:
-    // south wall: full-height wardrobe x 9000-10542 (600 deep) whose east side has lit open cubbies cut
-    // into it; east wall beside the bed: dressing desk z 1774-2945 (1171 x 550, top 780) running into the
-    // corner under the cubbies, mirror where the laptop was, lit open shelf (260) with an LED cove, and a
-    // 740 wall cabinet (280 deep) above with a lit glass door + two solid doors.
+    // --- Reference corner set, scaled to this room:
+    //  south wall, door end: open coat niche (400 wide) with a rounded top, hooks, lit, closed base
+    //  south wall: compact wardrobe x 9400-10642 (2 sections), 600 deep, to the ceiling
+    //  SE corner: open shelf tower x 10642-11092 (450 x 600) above the desk line, lit shelves
+    //  east wall beside the bed: dressing desk z 1800-2945 (450 deep, top 760) running under the corner
+    //  shelves, rounded pedestal at the bed end, mirror, lit open shelf, 2-door wall cabinet (glass + solid)
     {
-      const wh = keep(mat(0xf0ede8, { roughness: 0.5 })), taupe = keep(mat(0xd9cfc4, { roughness: 0.6 }));
-      const blk = keep(mat(0x2a2a2c, { roughness: 0.4 }));
-      const WXE = 10542;
-      wardrobeRun(9000, WXE, S, -1, TOP, ['double', 'long', 'shelves']);
-      // cubbies cut into the wardrobe's east side, facing the desk (250 deep), lit, with a rounded top
-      const CZ1 = S - 560, CZ2 = S - 40;
-      fb(WXE - 250, CZ1, WXE, CZ2, 790, 800, taupe);
-      for (const y of [1180, 1560]) { fb(WXE - 250, CZ1, WXE, CZ2, y, y + 15, wh); fb(WXE - 40, CZ1 + 10, WXE - 30, CZ2 - 10, y - 6, y, glow); }
-      fb(WXE - 260, CZ1, WXE - 250, CZ2, 800, 1900, taupe);                    // cubby back
-      fb(WXE, CZ1 - 15, WXE + 18, CZ1, 790, 1900, wh); fb(WXE, CZ2, WXE + 18, CZ2 + 15, 790, 1900, wh);   // edge trims
-      { const r = new THREE.Mesh(new THREE.CylinderGeometry(260, 260, 18, 32, 1, false, 0, Math.PI), wh);
-        r.rotation.z = Math.PI / 2; r.position.set(WXE + 9, 1900, (CZ1 + CZ2) / 2); furn.add(r); }     // rounded head
-      fb(WXE - 200, CZ1 + 80, WXE - 40, CZ1 + 180, 815, 1015, keep(mat(0xefe9df)));
-      cyl(WXE - 120, 1195, CZ2 - 150, 150, 45, keep(mat(0xd9cfc0)));
-      for (let i = 0; i < 4; i++) fb(WXE - 220 + i * 40, CZ1 + 60, WXE - 190 + i * 40, CZ1 + 240, 1575, 1800 - i * 15, keep(mat([0xefe9df, 0x2f2f33, 0x8c6b52, 0xd9cfc0][i])));
-      // dressing desk: 550 deep, top 780, rounded front corner, drawer pedestal at the bed end
-      const DX = E - 550, DZ1 = 1774, DZ2 = S;
-      fb(DX, DZ1, E, DZ2, 755, 780, taupe);
-      { const c = new THREE.Mesh(new THREE.CylinderGeometry(60, 60, 25, 24, 1, false, Math.PI, Math.PI / 2), taupe); c.position.set(DX + 60, 767, DZ1 + 60); furn.add(c); }
-      fb(DX + 10, DZ1, E, DZ1 + 400, 0, 755, wh);                              // pedestal
-      for (const [y0, y1] of [[20, 360], [370, 745]]) { fb(DX, DZ1 + 5, DX + 10, DZ1 + 395, y0, y1, wh); fb(DX - 6, DZ1 + 150, DX, DZ1 + 250, y1 - 40, y1 - 30, champ); }
-      fb(DX + 400, DZ1 + 440, DX + 420, DZ2 - 20, 0, 755, wh);                 // slim leg panel under the corner
-      // mirror on the wall where the laptop was, with makeup + tray
-      fb(E - 14, DZ1 + 120, E - 8, DZ1 + 760, 950, 1600, champ);
-      fb(E - 18, DZ1 + 140, E - 14, DZ1 + 740, 970, 1580, mirror);
-      fb(E - 450, DZ1 + 450, E - 200, DZ1 + 700, 780, 790, keep(mat(0xe8dfd2)));
-      let k3 = 0; for (let z = DZ1 + 470; z < DZ1 + 690; z += 55) cyl(E - 330, 790, z, 70 + (k3 % 3) * 35, 20, keep(mat([0xb5582e, 0xd9a441, 0xe8d6c6, 0xc9a7a0][k3++ % 4], { roughness: 0.4 })));
-      // lit open shelf with an LED cove, then the 740 wall cabinet
-      fb(E - 280, DZ1, E, DZ2, 1700, 1715, taupe); fb(E - 280, DZ1, E, DZ2, 1945, 1960, taupe);
-      fb(E - 280, DZ1, E - 270, DZ2, 1690, 1700, glow);                         // cove under the shelf
-      fb(E - 40, DZ1 + 20, E - 30, DZ2 - 20, 1935, 1945, glow);
-      fb(E - 270, DZ1 + 600, E - 60, DZ1 + 800, 1715, 1900, keep(mat(0x8c6b52)));
-      cyl(E - 150, 1715, DZ1 + 300, 160, 45, keep(mat(0xefe9df)));
-      fb(E - 280, DZ1, E, DZ2, 1960, 2700, wh);                                 // cabinet carcass
-      const g1 = DZ1 + 380;
-      fb(E - 270, DZ1 + 10, E - 20, g1 - 10, 1980, 2680, keep(mat(0xfff3e0, { emissive: 0xffe2b8, emissiveIntensity: 0.6 })));   // lit glass bay
-      fb(E - 270, DZ1 + 10, E - 20, g1 - 10, 2320, 2332, wh);
-      cyl(E - 150, 1985, DZ1 + 190, 220, 55, keep(mat(0xd9b8c8))); cyl(E - 150, 2335, DZ1 + 190, 200, 50, keep(mat(0x8fa3c9)));
-      fb(E - 298, DZ1 + 3, E - 280, g1 - 3, 1965, 2695, keep(mat(0xe6eef0, { transparent: true, opacity: 0.35, roughness: 0.1 })));
-      fb(E - 302, DZ1 + 3, E - 280, DZ1 + 23, 1965, 2695, blk); fb(E - 302, g1 - 23, E - 280, g1 - 3, 1965, 2695, blk);
-      fb(E - 302, DZ1 + 3, E - 280, g1 - 3, 1965, 1985, blk); fb(E - 302, DZ1 + 3, E - 280, g1 - 3, 2675, 2695, blk);
-      fb(E - 312, g1 - 60, E - 302, g1 - 50, 2100, 2400, blk);                  // slim black pull
-      for (const [a, b] of [[g1, (g1 + DZ2) / 2], [(g1 + DZ2) / 2, DZ2]]) fb(E - 298, a + 3, E - 280, b - 3, 1965, 2695, wh);
-      { const ch = new THREE.Group(); ch.position.set(DX - 330, 0, DZ1 + 650); ch.rotation.y = Math.PI / 2;   // back to the room, facing the mirror furn.add(ch);   // cream upholstered dressing chair
+      const wh = keep(mat(0xf0ede8, { roughness: 0.5 })), taupe = keep(mat(0xcf9f94, { roughness: 0.7 }));   // dusty-rose niche interiors (ref)
+      const blk = keep(mat(0x2a2a2c, { roughness: 0.4 })), F = S - 600;
+      const arched = (w, h0, h1, r) => {                                       // panel w x TOP with a round-topped opening
+        const sh = new THREE.Shape([[0, 0], [w, 0], [w, TOP], [0, TOP]].map(p => new THREE.Vector2(...p)));
+        const ho = new THREE.Path(); ho.moveTo(30, h0); ho.lineTo(w - 30, h0); ho.lineTo(w - 30, h1 - r);
+        ho.absarc(w / 2, h1 - r, r, 0, Math.PI, false); ho.lineTo(30, h0); sh.holes.push(ho);
+        return new THREE.ExtrudeGeometry(sh, { depth: 20, bevelEnabled: false });
+      };
+      // coat niche at the door end
+      const NX1 = 9000, NX2 = 9400;
+      fb(NX1, F + 40, NX2, S, 0, 80, M.dark);
+      fb(NX1, F, NX2, S, 80, 700, wh); fb(NX1 + 3, F - 18, NX2 - 3, F, 90, 690, wh);   // closed base + door
+      fb(NX1, S - 20, NX2, S, 700, TOP, taupe);                                 // taupe back
+      fb(NX1, F, NX1 + 20, S, 700, TOP, wh); fb(NX2 - 20, F, NX2, S, 700, TOP, wh);
+      fb(NX1 + 20, F, NX2 - 20, S, 2200, TOP, wh);                              // closed top
+      { const fr = new THREE.Mesh(arched(NX2 - NX1, 700, 2200, 170), wh); fr.position.set(NX1, 0, F - 20); furn.add(fr); }
+      fb(NX1 + 40, F + 60, NX2 - 40, F + 70, 2050, 2060, glow);                 // LED at the top of the niche
+      for (const x of [NX1 + 130, NX2 - 130]) { fb(x - 6, S - 60, x + 6, S - 20, 1750, 1790, champ); fb(x - 6, S - 70, x + 6, S - 60, 1700, 1790, champ); }   // hooks
+      rbox(260, 820, 120, NX1 + 130, 1300, S - 110, 40, keep(mat(0x9aa0a6, { roughness: 1 })));   // coat
+      rbox(200, 160, 80, NX2 - 130, 1450, S - 100, 30, keep(mat(0x7a4a2e, { roughness: 0.6 })));   // bag
+      fb(NX2 - 132, S - 70, NX2 - 128, S - 60, 1530, 1750, keep(mat(0x7a4a2e)));
+      cyl(NX1 + 200, 700, F + 300, 180, 50, keep(mat(0xd9cfc0)));
+      // compact wardrobe
+      wardrobeRun(NX2, 10642, S, -1, TOP, ['double', 'shelves']);
+      // corner open shelf tower (above the desk), side panel on the aisle face, lit shelves
+      const TX = E - 450;
+      fb(TX, F, E, F + 18, 760, TOP, wh);                                       // side panel (aisle face)
+      fb(E - 15, F + 18, E, S, 760, TOP, taupe); fb(TX, S - 15, E, S, 760, TOP, taupe);   // taupe backs
+      for (const y of [1150, 1500, 1850, 2200, 2550]) {
+        fb(TX, F + 18, E - 15, S - 15, y, y + 20, wh);
+        fb(TX + 10, F + 30, TX + 20, S - 30, y - 8, y, glow);
+      }
+      fb(TX + 80, S - 260, TX + 300, S - 60, 1170, 1210, keep(mat(0xefe9df)));
+      for (let i = 0; i < 5; i++) fb(TX + 120, F + 120 + i * 45, TX + 330, F + 155 + i * 45, 1520, 1700 - i * 12, keep(mat([0xefe9df, 0x8c6b52, 0xd9cfc0, 0x2f2f33, 0xe8dccb][i])));
+      cyl(TX + 220, 1870, F + 400, 200, 55, keep(mat(0xd9cfc0))); cyl(TX + 220, 2220, F + 250, 150, 45, keep(mat(0x9a5b3c)));
+      fb(TX + 100, F + 150, TX + 330, F + 380, 2570, 2700, keep(mat(0xe8dfd2)));
+      // dressing desk along the east wall
+      const DX = E - 450, DZ1 = 1800;
+      fb(DX, DZ1 + 120, E, S, 735, 760, taupe);                                 // top
+      { const c = new THREE.Mesh(new THREE.CylinderGeometry(120, 120, 25, 32, 1, false, Math.PI / 2, Math.PI / 2), taupe); c.position.set(DX + 120, 747, DZ1 + 120); furn.add(c);
+        fb(DX + 120, DZ1, E, DZ1 + 120, 735, 760, taupe); }                     // rounded bed-end corner
+      fb(DX + 120, DZ1 + 10, E, DZ1 + 380, 0, 735, wh);                         // rounded pedestal
+      { const c = new THREE.Mesh(new THREE.CylinderGeometry(120, 120, 735, 32, 1, false, Math.PI / 2, Math.PI / 2), wh); c.position.set(DX + 120, 367, DZ1 + 130); furn.add(c);
+        fb(DX + 3, DZ1 + 130, DX + 120, DZ1 + 380, 0, 735, wh); }
+      fb(DX - 4, DZ1 + 200, DX + 3, DZ1 + 300, 640, 652, champ);                // drawer pull
+      fb(DX, DZ1 + 380, DX + 18, DZ1 + 395, 0, 735, wh);
+      // mirror (where the laptop was), tray of makeup
+      fb(E - 14, DZ1 + 90, E - 8, F - 60, 980, 1580, champ);
+      fb(E - 18, DZ1 + 110, E - 14, F - 80, 1000, 1560, mirror);
+      fb(E - 380, DZ1 + 420, E - 160, DZ1 + 560, 760, 768, keep(mat(0xe8dfd2)));
+      let k3 = 0; for (let z = DZ1 + 440; z < DZ1 + 550; z += 36) cyl(E - 270, 768, z, 60 + (k3 % 3) * 30, 16, keep(mat([0xb5582e, 0xd9a441, 0xe8d6c6][k3++ % 3], { roughness: 0.4 })));
+      // lit open shelf (260) + wall cabinet (2 doors, 280 deep) between the bed and the corner tower
+      const CZ2 = F;
+      fb(E - 280, DZ1, E, CZ2, 1700, 1716, wh); fb(E - 16, DZ1, E, CZ2, 1716, 1960, taupe);
+      fb(E - 280, DZ1, E - 270, CZ2, 1690, 1700, glow); fb(E - 40, DZ1 + 15, E - 30, CZ2 - 15, 1944, 1954, glow);
+      cyl(E - 140, 1716, DZ1 + 120, 140, 40, keep(mat(0xefe9df))); fb(E - 240, CZ2 - 200, E - 40, CZ2 - 20, 1716, 1880, keep(mat(0x8c6b52)));
+      fb(E - 280, DZ1, E, CZ2, 1960, 2700, wh);
+      const mz = (DZ1 + CZ2) / 2;
+      fb(E - 270, DZ1 + 10, E - 20, mz - 10, 1980, 2680, keep(mat(0xfff3e0, { emissive: 0xffe2b8, emissiveIntensity: 0.5 })));
+      fb(E - 270, DZ1 + 10, E - 20, mz - 10, 2320, 2332, wh);
+      cyl(E - 150, 1985, (DZ1 + mz) / 2, 200, 50, keep(mat(0xd9b8c8))); cyl(E - 150, 2335, (DZ1 + mz) / 2, 180, 45, keep(mat(0x8fa3c9)));
+      fb(E - 296, DZ1 + 3, E - 280, mz - 2, 1965, 2695, keep(mat(0xe6eef0, { transparent: true, opacity: 0.3, roughness: 0.1 })));
+      for (const [a, b, y0, y1] of [[DZ1 + 3, DZ1 + 21, 1965, 2695], [mz - 20, mz - 2, 1965, 2695], [DZ1 + 3, mz - 2, 1965, 1983], [DZ1 + 3, mz - 2, 2677, 2695]]) fb(E - 298, a, E - 280, b, y0, y1, blk);   // slim black frame
+      fb(E - 298, mz + 2, E - 280, CZ2 - 3, 1965, 2695, wh);
+      fb(E - 306, mz - 40, E - 298, mz - 30, 2100, 2350, blk); fb(E - 306, mz + 30, E - 298, mz + 40, 2100, 2350, blk);
+      fb(E - 280, CZ2 - 3, E, CZ2, 1700, 2700, wh);                             // meets the tower side panel
+      { const ch = new THREE.Group(); ch.position.set(DX - 330, 0, DZ1 + 620); ch.rotation.y = Math.PI / 2; furn.add(ch);   // cream dressing chair
         const up = keep(mat(0xe8dccb, { roughness: 1 })), fr = keep(mat(0xf2f2f2, { metalness: 0.6, roughness: 0.3 }));
-        for (const [w, h, d, x, y, z, r] of [[460, 90, 440, 0, 470, 0, 30], [460, 360, 70, 0, 760, -210, 30]]) { const m = new THREE.Mesh(new RoundedBoxGeometry(w, h, d, 4, r), up); m.position.set(x, y, z); ch.add(m); }
-        for (const x of [-210, 210]) { const a = new THREE.Mesh(new THREE.BoxGeometry(18, 18, 420), fr); a.position.set(x, 620, -20); ch.add(a); const p = new THREE.Mesh(new THREE.BoxGeometry(18, 200, 18), fr); p.position.set(x, 520, 180); ch.add(p); }
+        for (const [w, h, d, x, y, z, r] of [[440, 90, 420, 0, 470, 0, 30], [440, 340, 70, 0, 750, -200, 30]]) { const m = new THREE.Mesh(new RoundedBoxGeometry(w, h, d, 4, r), up); m.position.set(x, y, z); ch.add(m); }
+        for (const x of [-200, 200]) { const a = new THREE.Mesh(new THREE.BoxGeometry(18, 18, 400), fr); a.position.set(x, 620, -20); ch.add(a); const p = new THREE.Mesh(new THREE.BoxGeometry(18, 200, 18), fr); p.position.set(x, 520, 170); ch.add(p); }
         const col = new THREE.Mesh(new THREE.CylinderGeometry(25, 25, 380, 12), fr); col.position.y = 230; ch.add(col);
-        for (let k = 0; k < 5; k++) { const a = k / 5 * Math.PI * 2, l = new THREE.Mesh(new THREE.BoxGeometry(280, 25, 35), fr); l.position.set(Math.cos(a) * 140, 40, Math.sin(a) * 140); l.rotation.y = -a; ch.add(l); } }
+        for (let k = 0; k < 5; k++) { const a = k / 5 * Math.PI * 2, l = new THREE.Mesh(new THREE.BoxGeometry(260, 25, 35), fr); l.position.set(Math.cos(a) * 130, 40, Math.sin(a) * 130); l.rotation.y = -a; ch.add(l); } }
     }
     let k = 0;
     // --- queen bed, head on the east wall, no headboard
