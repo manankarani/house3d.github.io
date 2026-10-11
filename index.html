@@ -645,24 +645,25 @@ for (const z of [1160, 1740, 2320]) fb(3845, z + 20, 4555, z + 560, 480, 560, M.
   }
 }
 
-// Partition panels: fabric-wrapped PET felt, full height (opaque, sound-absorbing), warm greige with
-// subtle vertical channels, in slim black frames.
-const felt = mat(0xffffff, { roughness: 1, map: canvasTex(64, 256, (g, w, h) => {
-  g.fillStyle = '#b9ad9c'; g.fillRect(0, 0, w, h);
-  for (let i = 0; i < 1500; i++) {                     // felt fibre speckle
-    g.fillStyle = `rgba(${Math.random() < 0.5 ? '255,255,255' : '60,50,40'},0.06)`;
-    g.fillRect(Math.random() * w, Math.random() * h, 1, 1);
-  }
-  for (let x = 0; x < w; x += 16) { g.fillStyle = 'rgba(70,60,50,0.28)'; g.fillRect(x, 0, 2, h); }   // channels
-}) });
+// Partition panels: smoked fluted glass (same as the mandir doors), opaque, in slim matte-black frames.
+// One material per panel width so the reeds stay ~10 mm whatever the panel count.
+const partBlack = mat(0x1c1c1e, { roughness: 0.35, metalness: 0.4 }); partBlack.userData.keepColor = true;
+const fluteGlass = {};
+const fluteFor = w => fluteGlass[w] ||= (() => {
+  const m = mat(0xffffff, { roughness: 0.35, emissive: 0x2a2117 }); m.userData.keepColor = true;
+  m.map = canvasTex(64, 16, (g, cw, ch) => { for (let x = 0; x < cw; x += 8) { const gr = g.createLinearGradient(x, 0, x + 8, 0);
+    gr.addColorStop(0, '#4a4642'); gr.addColorStop(0.5, '#a09a93'); gr.addColorStop(1, '#4a4642'); g.fillStyle = gr; g.fillRect(x, 0, 8, ch); } });
+  m.map.wrapS = THREE.RepeatWrapping; m.map.repeat.set(Math.round(w / 80), 1); return m; })();
 // Partition: three space-saving systems, picked from the dropdown. All run on the straight-wall
-// line (x 2590) from the window wall (z 75) to the living's lower wall (z 3650), in PET felt.
+// line (x 2590) from the window wall (z 75) to the living's lower wall (z 3650), in fluted glass.
 const PL = 2590, PZ1 = 625, PZ2 = 3650,   // starts at the window seat's front edge: the seat stays one piece
  PLEN = PZ2 - PZ1, PH = 2450;
 const partGroups = {}, partSetters = {};
-const panelGroup = (parent, w, h, t) => {             // one felt panel: local x = thickness, z = width
+const panelGroup = (parent, w, h, t) => {             // one fluted-glass panel: local x = thickness, z = width
   const g = new THREE.Group(); parent.add(g);
-  box(t, h, w - 4, 0, h / 2, 0, felt, g);
+  box(12, h - 60, w - 64, 0, h / 2, 0, fluteFor(w), g);
+  for (const z of [-(w - 4) / 2 + 15, (w - 4) / 2 - 15]) box(t, h, 30, 0, h / 2, z, partBlack, g);   // stiles
+  for (const y of [15, h - 15]) box(t, 30, w - 64, 0, y, 0, partBlack, g);                           // rails
   return g;
 };
 // 1. Bi-fold (concertina) on one ceiling-recessed track: 6 hinged panels, ~50 thick when closed.
