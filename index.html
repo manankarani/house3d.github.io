@@ -1349,7 +1349,7 @@ wardrobeRun(7950, 10225, 4365, 1, 2880, ['long', 'double', 'shelves']);   // det
     const keep = m => { m.userData.keepColor = true; return m; };
     const S = 8315, W0 = 6975, E0 = 10225;
     const walnut = keep(mat(0xc4a27e, { roughness: 0.5 })), walnutL = keep(mat(0xd6bb98, { roughness: 0.5 }));   // pale natural oak
-    const velvet = keep(mat(0xe6dccd, { roughness: 1 })), velvetD = keep(mat(0xdcd0bf, { roughness: 1 }));   // oat boucle
+    const velvet = keep(mat(0xd9cec0, { roughness: 0.95 })), velvetD = keep(mat(0xd2c6b6, { roughness: 0.95 }));   // light taupe (bedroom 2 language)
     const ivory = keep(mat(0xf2ede4, { roughness: 0.95 })), linen = keep(mat(0xe2d8c8, { roughness: 1 }));
     const mocha = keep(mat(0xa9b39c, { roughness: 1 })), rust = keep(mat(0xc98f6e, { roughness: 0.9 }));   // soft sage + clay accents
     const bronze = keep(mat(0xc8ae84, { metalness: 0.75, roughness: 0.3 }));   // champagne
@@ -1360,7 +1360,7 @@ wardrobeRun(7950, 10225, 4365, 1, 2880, ['long', 'double', 'shelves']);   // det
       gr.addColorStop(0, '#b89a78'); gr.addColorStop(0.5, '#e2cdb0'); gr.addColorStop(1, '#b89a78'); g.fillStyle = gr; g.fillRect(x, 0, 16, h); } });
     fluteTex.wrapS = THREE.RepeatWrapping; fluteTex.repeat.set(16, 1);
     const flute = keep(mat(0xffffff, { map: fluteTex, roughness: 0.55 }));
-    const knitTex = canvasTex(64, 64, (g, w, h) => { g.fillStyle = '#b7bfa8'; g.fillRect(0, 0, w, h); g.strokeStyle = 'rgba(255,255,255,.18)';
+    const knitTex = canvasTex(64, 64, (g, w, h) => { g.fillStyle = '#ddd3c4'; g.fillRect(0, 0, w, h); g.strokeStyle = 'rgba(255,255,255,.22)';
       for (let y = 0; y < h; y += 6) { g.beginPath(); g.moveTo(0, y); for (let x = 0; x <= w; x += 6) g.lineTo(x, y + (x / 6 % 2 ? 3 : 0)); g.stroke(); } });
     knitTex.wrapS = knitTex.wrapT = THREE.RepeatWrapping; knitTex.repeat.set(6, 3);
     const knit = keep(mat(0xffffff, { map: knitTex, roughness: 1 }));
@@ -1389,8 +1389,6 @@ wardrobeRun(7950, 10225, 4365, 1, 2880, ['long', 'double', 'shelves']);   // det
     for (const x of [8190, 9790]) rbox(30, 220, 520, x, 570, 6650, 10, knit);
     for (const x of [8620, 9360]) rbox(660, 600, 150, x, 900, S - 200, 70, linen);          // euro shams against the panel
     for (const x of [8620, 9360]) { const p = rbox(640, 170, 420, x, 720, S - 430, 70, ivory); p.rotation.x = -0.25; }   // sleeping pillows
-    rbox(560, 260, 140, 8990, 760, S - 600, 60, rust);                            // lumbar cushion
-    for (const x of [8550, 9430]) { const c = rbox(400, 400, 130, x, 820, S - 560, 60, mocha); c.rotation.x = -0.3; }    // accent cushions
 
     // --- window-side nightstand (150 clear of the window wall for the blind) + glass pendant
     const NX1 = 9800, NX2 = E0 - 150;
@@ -1417,10 +1415,10 @@ wardrobeRun(7950, 10225, 4365, 1, 2880, ['long', 'double', 'shelves']);   // det
     for (const x of [DX1 + 110, DX2 - 110]) fb(x - 30, S - 330, x + 30, S - 270, 0, 600, keep(mat(0xf4f4f2)));   // sit-stand legs
     fb(DX1, S - 360, DX2, S - 20, 1300, 1600, walnut);                             // lit niche box
     fb(DX1 + 10, S - 345, DX2 - 10, S - 335, 1585, 1592, glow);
-    fb(DX1, S - 360, DX2, S - 20, 1600, 2400, greige);                             // upper cabinet
+    fb(DX1, S - 360, DX2, S - 20, 1600, 2400, keep(mat(0xe8e1d6)));             // upper cabinet carcass
     for (const [a, b] of [[DX1, (DX1 + DX2) / 2], [(DX1 + DX2) / 2, DX2]]) {
-      fb(a + 3, S - 376, b - 3, S - 360, 1605, 2395, keep(mat(0xd8cdb9, { transparent: true, opacity: 0.55, roughness: 0.25 })));
-      fb(a + 3, S - 380, a + 23, S - 360, 1605, 2395, bronze); fb(b - 23, S - 380, b - 3, S - 360, 1605, 2395, bronze);
+      fb(a + 3, S - 378, b - 3, S - 360, 1605, 2395, keep(mat(0xd9cec0, { roughness: 0.5 })));   // light-taupe door
+      const px = a === DX1 ? b - 40 : a + 28; fb(px, S - 390, px + 12, S - 378, 1650, 2050, bronze);   // champagne bar pull
     }
     { // MacBook Pro 14" (≈313 x 221 x 16), space grey, open ~110°, facing you as you sit at the desk
       const alu = keep(mat(0x9a9ca0, { metalness: 0.8, roughness: 0.35 })), keys = keep(mat(0x1a1a1c, { roughness: 0.7 }));
