@@ -82,6 +82,7 @@
     <div class="row"><span>Kitchen finish</span><select id="kfin" style="width:auto"><option value="cloud" selected>Cloud Dancer</option><option value="charcoal">Charcoal & walnut</option><option value="sage">Sage & brass</option><option value="greige">Greige & white</option></select></div>
     <label class="row"><span>Kitchen drawers open</span><input type="checkbox" class="switch" id="kdrT"></label>
     <label class="row"><span>Wardrobes open</span><input type="checkbox" class="switch" id="wdrT"></label>
+    <label class="row"><span>Bedroom 1: storage behind bed</span><input type="checkbox" class="switch" id="bsT"></label>
     <label class="row"><span>Imagine: refuge drying</span><input type="checkbox" class="switch" id="refugeT" checked></label>
   </section>
   <section>
@@ -1369,6 +1370,7 @@ wardrobeRun(7950, 10225, 4365, 1, 2880, ['long', 'double', 'shelves'], [], { shu
       g.strokeStyle = 'rgba(110,90,70,.35)'; g.lineWidth = 3; g.strokeRect(10, 10, w - 20, h - 20); });
     const rugM = keep(mat(0xffffff, { map: rugTexL, roughness: 1 }));
 
+    const bed0 = furn.children.length;
     // --- headboard wall: plain wall + channel-stitched light-taupe headboard (same as bedroom 2)
     { const hb = keep(mat(0xd9cec0, { roughness: 0.95 })), n = 8, x1 = 8150, x2 = 9830, cw = (x2 - x1) / n;
       for (let i = 0; i < n; i++) rbox(cw - 6, 950, 70, x1 + cw * (i + 0.5), 725, S - 45, 25, hb);
@@ -1385,22 +1387,30 @@ wardrobeRun(7950, 10225, 4365, 1, 2880, ['long', 'double', 'shelves'], [], { shu
     for (const x of [8620, 9360]) rbox(660, 600, 150, x, 900, S - 200, 70, linen);          // euro shams against the panel
     for (const x of [8620, 9360]) { const p = rbox(640, 170, 420, x, 720, S - 430, 70, ivory); p.rotation.x = -0.25; }   // sleeping pillows
 
-    // --- window-side nightstand (150 clear of the window wall for the blind) + glass pendant
-    const NX1 = 9800, NX2 = E0 - 150;
-    fb(NX1, S - 420, NX2, S - 40, 380, 600, keep(mat(0xd9cec0, { roughness: 0.5 })));   // light-taupe drawer box
-    fb(NX1 - 10, S - 430, NX2, S - 40, 600, 625, keep(mat(0xa69888, { roughness: 0.55 })));   // darker top
-    fb(NX1 - 4, S - 330, NX1, S - 130, 480, 495, bronze);                          // bronze pull
-    fb(NX1 + 20, S - 360, NX1 + 180, S - 220, 625, 665, W.book[0]); cyl(NX1 + 120, 625, S - 120, 110, 30, keep(mat(0x2b2b2b)));
-    { const PX = (NX1 + NX2) / 2, PZ = S - 240;
-      fb(PX - 2, PZ - 2, PX + 2, PZ + 2, 1680, 2880, bronze);                      // cord
-      const cap = new THREE.Mesh(new THREE.CylinderGeometry(60, 60, 30, 24), bronze); cap.position.set(PX, 1665, PZ); furn.add(cap);
-      const sh = new THREE.Mesh(new THREE.CylinderGeometry(80, 80, 240, 28), glass); sh.position.set(PX, 1530, PZ); furn.add(sh); }
-
+    // bed + headboard as one group: moved 315 toward the window (150 left for curtains); the window-side
+    // nightstand is dropped and the study unit extends into the freed space
+    const bedG = new THREE.Group(); furn.children.slice(bed0).forEach(c => bedG.add(c)); furn.add(bedG);
+    bedG.position.x = 315;
+    // option: bed 500 toward the wardrobe with a storage wall behind it (toggle to compare)
+    const behindG = new THREE.Group(); behindG.visible = false; furn.add(behindG);
+    { const lt2 = keep(mat(0xd9cec0, { roughness: 0.5 })), cr2 = keep(mat(0xe8e1d6)), X1 = 8465, X2 = E0 - 150, Z = S - 500;
+      const f3 = (x1, z1, x2, z2, y0, y1, m) => box(x2 - x1, y1 - y0, z2 - z1, (x1 + x2) / 2, (y0 + y1) / 2, (z1 + z2) / 2, m, behindG);
+      f3(X1, Z, X2, S, 0, 2860, cr2);                                            // 500-deep storage wall
+      f3(X1, Z - 18, X2, Z, 1250, 2860, cr2);
+      const n = 4, w = (X2 - X1) / n;
+      for (let i = 0; i < n; i++) { const a = X1 + i * w + 2, b = a + w - 4;
+        f3(a, Z - 18, b, Z, 1255, 2855, lt2);                                   // upper doors above the headboard
+        const px = i % 2 ? a + 28 : b - 40; f3(px, Z - 30, px + 12, Z - 18, 1300, 1700, bronze); }
+      f3(X1, Z - 18, X1 + 300, Z, 0, 1250, lt2); f3(X2 - 300, Z - 18, X2, Z, 0, 1250, lt2);   // side doors beside the headboard
+      f3(X1 + 270, Z - 30, X1 + 282, Z - 18, 500, 1100, bronze); f3(X2 - 282, Z - 30, X2 - 270, Z - 18, 500, 1100, bronze);
+      f3(X1 + 300, Z - 6, X2 - 300, Z, 0, 1250, lt2);                           // panel behind the headboard (lift-up access from above)
+      f3(X1 + 10, Z - 25, X2 - 10, Z - 18, 1240, 1250, glow); }
+    window.setBedStorage = on => { behindG.visible = on; bedG.position.z = on ? -500 : 0; };
     // --- study wall (south, x 6975-8150): full-height unit in kitchen colours (light taupe + darker
     // taupe contrast). Ceiling-high cabinets with curved inner corners, a rounded lit open niche, darker
     // back panel with LED, and a darker desk top that curves down into a waterfall side at the bed.
     const lt = keep(mat(0xd9cec0, { roughness: 0.5 })), dk = keep(mat(0xa69888, { roughness: 0.55 })), cr = keep(mat(0xe8e1d6));
-    const DX1 = W0, DX2 = 8150, DD = 550, CT = 2860, CB = 1550, NX = 7700;
+    const DX1 = W0, DX2 = 8440, DD = 550, CT = 2860, CB = 1550, NX = 7990;   // extended into the old nightstand gap
     // upper cabinets to the false ceiling (no dust ledge) + rounded open niche at the bed end
     fb(DX1, S - 380, NX, S, CB, CT, cr);
     const hw = (NX - DX1) / 2;
@@ -1438,7 +1448,7 @@ wardrobeRun(7950, 10225, 4365, 1, 2880, ['long', 'double', 'shelves'], [], { shu
     { // MacBook Pro 14", open, facing you
       const alu = keep(mat(0x9a9ca0, { metalness: 0.8, roughness: 0.35 })), keys = keep(mat(0x1a1a1c, { roughness: 0.7 }));
       const scr = keep(mat(0x1b2a3a, { emissive: 0x3f6f9f, emissiveIntensity: 0.55, roughness: 0.1 }));
-      const MX = 7500, Z1 = S - 470, Z2 = Z1 + 221, Y = TY;
+      const MX = 7650, Z1 = S - 470, Z2 = Z1 + 221, Y = TY;
       fb(MX - 156, Z1, MX + 156, Z2, Y, Y + 8, alu); fb(MX - 135, Z1 + 105, MX + 135, Z2 - 18, Y + 8, Y + 9, keys);
       const lid = new THREE.Group(); lid.position.set(MX, Y + 8, Z2); lid.rotation.x = -0.35; furn.add(lid);
       box(313, 214, 6, 0, 107, 0, alu, lid); box(296, 190, 1, 0, 110, -3.5, scr, lid);
@@ -2243,6 +2253,8 @@ $('partT').onchange = e => setPartition(!e.target.checked);
 $('rackT').onchange = e => setRack(e.target.checked);
 $('blindT').onchange = e => setBlind(e.target.checked);
 $('kdrT').onchange = e => setKDrawers(e.target.checked);
+$('bsT').onchange = e => setBedStorage(e.target.checked);
+if (/bs=on/.test(location.hash)) { $('bsT').checked = true; setBedStorage(true); }
 $('wdrT').onchange = e => wardrobeDoors.forEach(({ g, open }) => { g.rotation.y = e.target.checked ? open : 0; });
 if (/wdr=open/.test(location.hash)) { $('wdrT').checked = true; $('wdrT').onchange({ target: $('wdrT') }); }   // preview link
 if (/kdr=open/.test(location.hash)) { $('kdrT').checked = true; setKDrawers(true); }   // preview link
