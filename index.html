@@ -731,6 +731,7 @@ const seatV1 = furn.children.slice(seatStart, tvStart);
 const livingV1 = new THREE.Group(), livingV2 = new THREE.Group();
 const partKeep = new Set([...Object.values(partGroups), partBulk]);   // partition now belongs to the v2 room
 for (const c of furn.children.slice(tvStart)) if (!storageShared.includes(c) && !partKeep.has(c)) livingV1.add(c);
+storageShared.forEach(c => furn.remove(c));   // storage behind the recliner removed
 furn.add(livingV1, livingV2);
 livingV2.visible = false;
 {
@@ -739,7 +740,9 @@ livingV2.visible = false;
   const r2 = (x1, z1, x2, z2, y0, y1, r, m) => { const o = new THREE.Mesh(new RoundedBoxGeometry(x2 - x1, y1 - y0, z2 - z1, 4, r), m);
     o.position.set((x1 + x2) / 2, (y0 + y1) / 2, (z1 + z2) / 2); o.castShadow = o.receiveShadow = true; G.add(o); return o; };
   const c2 = (x, y, z, h, r, m, rt = r * 0.75) => { const o = new THREE.Mesh(new THREE.CylinderGeometry(rt, r, h, 32), m); o.position.set(x, y + h / 2, z); o.castShadow = true; G.add(o); return o; };
-  const oakV = mat(0xc9a27a, { roughness: 0.55 });
+  const kc = (c, r = 0.5) => { const m = mat(c, { roughness: r }); m.userData.keepColor = true; return m; };
+  const LT = kc(0xd9cec0), DK = kc(0xa69888, 0.55), CR = kc(0xe8e1d6), CH = kc(0xc8ae84); CH.metalness = 0.75;   // kitchen colours
+  const oakV = LT;
   const stone = mat(0xffffff, { roughness: 0.35, map: canvasTex(8, 8, (g, w, h) => {   // (unused)
     g.fillStyle = '#34322f'; g.fillRect(0, 0, w, h);
     for (let i = 0; i < 10; i++) { g.strokeStyle = `rgba(190,180,165,${0.12 + Math.random() * 0.2})`; g.lineWidth = 0.6 + Math.random() * 1.5;
@@ -751,7 +754,7 @@ livingV2.visible = false;
   }) });
 
   // --- joined window seat, wall to the mandir (x 75-4612)
-  f2(75, 75, 4400, 625, 0, 330, M.walnut); r2(90, 85, 4390, 620, 330, 460, 45, M.cushion);   // rounded boucle cushion   // ends 518 before the mandir: standing space
+  f2(75, 75, 4400, 625, 0, 330, LT); f2(75, 600, 4400, 625, 0, 330, DK); r2(90, 85, 4390, 620, 330, 460, 45, kc(0xece6dc, 0.95));   // rounded boucle cushion   // ends 518 before the mandir: standing space
   // --- mandir on the east wall in the window corner (z 75-989, 457 deep), faces west: you face east
   { const F = 4918, B = 5375, Z1 = 75, Z2 = 989, MID = (Z1 + Z2) / 2;
     f2(F, Z1, B, Z1 + 30, 0, 2870, oakV); f2(F, Z2 - 30, B, Z2, 0, 2870, oakV);
@@ -768,8 +771,8 @@ livingV2.visible = false;
     f2(F, Z1 + 30, F + 18, Z2 - 30, 2610, 2860, oakV);                                               // loft
   }
   // --- recliner (same place as v1, backed onto the low storage), softened: rounded body, pillow back, plump arms
-  const teal = mat(0xa8774f, { roughness: 0.55 }); teal.userData.keepColor = true;   // cognac leather (warm palette)
-  const RX1 = 3825, RX2 = 4775, RZ1 = 1040, RZ2 = 3020;
+  const teal = kc(0x8e7f70, 0.6);   // darker-taupe leather (kitchen family)
+  const RX1 = 4275, RX2 = 5225, RZ1 = 1040, RZ2 = 3020;   // against the wall now (wall-hugger)
   r2(RX1 + 40, RZ1 + 150, RX2, RZ2 - 150, 0, 440, 60, teal);                                 // base
   for (let k = 0; k < 3; k++) {
     const z1 = RZ1 + 150 + k * 560, z2 = z1 + 560;
@@ -780,46 +783,57 @@ livingV2.visible = false;
   for (const [z1, z2] of [[RZ1, RZ1 + 150], [RZ2 - 150, RZ2]]) r2(RX1 + 80, z1, RX2, z2, 0, 700, 70, teal);   // plump arms
   // --- oval centre table close to the recliner (clear of the footrests): honed travertine top on a
   // fluted walnut drum
-  { const trav = mat(0xd9ccb6, { roughness: 0.7 });
-    const top = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 40, 48), trav); top.scale.set(300, 1, 560); top.position.set(2950, 400, 2030); top.castShadow = true; G.add(top);
-    const base = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 380, 48), flute); base.scale.set(170, 1, 400); base.position.set(2950, 190, 2030); base.castShadow = true; G.add(base);
-    c2(2950, 420, 1850, 220, 60, W.vase[1]); f2(2860, 2150, 3060, 2400, 420, 450, W.book[1]); f2(2870, 2160, 3050, 2390, 450, 470, W.book[0]);
+  { const trav = DK, flute = LT;
+    const top = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 40, 48), trav); top.scale.set(300, 1, 560); top.position.set(3250, 400, 2030); top.castShadow = true; G.add(top);
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 380, 48), flute); base.scale.set(170, 1, 400); base.position.set(3250, 190, 2030); base.castShadow = true; G.add(base);
+    c2(3250, 420, 1850, 220, 60, W.vase[1]); f2(3160, 2150, 3360, 2400, 420, 450, W.book[1]); f2(3170, 2160, 3350, 2390, 450, 470, W.book[0]);
   }
-  // --- TV wall on the west wall (face x 75), Cloud Dancer: soft ribbed plaster panel floor to ceiling,
-  // warm-greige TV frame with a hidden LED outline, 85" TV (sized for the far dining chair), long
-  // floating oak console with fluted push-to-open fronts, slim lit oak shelves at the corner end.
-  const rib = mat(0xffffff, { roughness: 0.9, map: canvasTex(128, 16, (g, w, h) => {
-    for (let x = 0; x < w; x += 16) { const gr = g.createLinearGradient(x, 0, x + 16, 0);
-      gr.addColorStop(0, '#dcd6ca'); gr.addColorStop(0.5, '#f3efe6'); gr.addColorStop(1, '#dcd6ca'); g.fillStyle = gr; g.fillRect(x, 0, 16, h); }
-  }) });
-  rib.map.wrapS = THREE.RepeatWrapping; rib.map.repeat.set(20, 1);
-  const frameG = mat(0xcfc6b8, { roughness: 0.85 }), oakFl = mat(0xffffff, { roughness: 0.6, map: canvasTex(128, 16, (g, w, h) => {
-    for (let x = 0; x < w; x += 16) { const gr = g.createLinearGradient(x, 0, x + 16, 0);
-      gr.addColorStop(0, '#a88460'); gr.addColorStop(0.5, '#d6b48a'); gr.addColorStop(1, '#a88460'); g.fillStyle = gr; g.fillRect(x, 0, 16, h); }
-  }) });
-  oakFl.map.wrapS = THREE.RepeatWrapping; oakFl.map.repeat.set(4, 1);
-  f2(75, 625, 105, 3575, 0, 2880, rib);                                           // ribbed panel, wall to corner
-  f2(105, 640, 125, 2600, 760, 2200, frameG);                                     // TV frame panel
-  for (const [z1, z2, y0, y1] of [[640, 2600, 2192, 2200], [640, 2600, 760, 768], [640, 648, 760, 2200], [2592, 2600, 760, 2200]])
-    f2(125, z1, 129, z2, y0, y1, M.glow);                                         // hidden LED outline
-  f2(125, 675, 160, 2565, 940, 2020, M.dark);                                     // 85" TV (1890 x 1080)
-  f2(105, 700, 505, 2950, 300, 560, oakV);                                        // floating oak console
-  for (let z = 700; z < 2945; z += 450) f2(505, z + 3, 520, z + 447, 305, 555, oakFl);   // fluted push-to-open fronts
-  f2(125, 720, 485, 2930, 290, 300, M.glow);                                      // LED under the console
-  f2(105, 3050, 405, 3500, 600, 2600, frameG);                                    // corner shelf box
-  for (const y of [1100, 1600, 2100]) { f2(125, 3070, 405, 3480, y, y + 25, oakV); f2(385, 3070, 395, 3480, y - 8, y, M.glow); }
-  c2(250, 1125, 3280, 220, 60, W.vase[1]); c2(250, 1625, 3200, 160, 70, W.vase[2]); f2(150, 3150, 330, 3400, 2125, 2350, W.book[0]);
-  f2(200, 2400, 420, 2650, 560, 590, W.book[1]); c2(300, 560, 1000, 200, 55, W.vase[0]);   // console styling
+  // --- TV wall (west, face x 75, z 625-3575) in the bedroom-desk language and kitchen colours:
+  // darker-taupe back panel with LED, light-taupe cabinets to the ceiling with curved corners where the
+  // doors meet, floating console with a darker top that curves down to the floor at the window-seat end,
+  // and a full-height corner column with a lit, darker-lined open niche.
+  { const X0 = 75, Z0 = 625, ZC = 3050, ZE = 3575, CT = 2860, CB = 2250, D = 450, TY = 560, TT = 40, R = 120;
+    const ext = (shape, d) => new THREE.ExtrudeGeometry(shape, { depth: d, bevelEnabled: false });
+    f2(X0, Z0, X0 + 12, ZC, 560, CB, DK);                                       // back panel
+    f2(X0 + 12, Z0 + 20, X0 + 22, ZC - 20, CB - 8, CB, M.glow);                 // LED under the cabinets
+    f2(X0, Z0, X0 + 360, ZC, CB, CT, CR);                                       // upper cabinet carcass
+    const n = 4, w = (ZC - Z0) / n;
+    for (let i = 0; i < n; i++) {                                               // doors, curved bottom corner at each pair's seam
+      const a = Z0 + i * w + 2, ww = w - 4, rr = 110, g = new THREE.Shape(), right = i % 2 === 0;
+      g.moveTo(0, 0);
+      if (right) { g.lineTo(ww - rr, 0); g.absarc(ww - rr, rr, rr, 1.5 * Math.PI, 2 * Math.PI, false); g.lineTo(ww, CT - CB - 6); g.lineTo(0, CT - CB - 6); }
+      else { g.lineTo(ww, 0); g.lineTo(ww, CT - CB - 6); g.lineTo(0, CT - CB - 6); g.lineTo(0, rr); g.absarc(rr, rr, rr, Math.PI, 1.5 * Math.PI, false); }
+      const m = new THREE.Mesh(ext(g, 18), LT); m.rotation.y = -Math.PI / 2; m.position.set(X0 + 378, CB + 3, a); G.add(m);
+    }
+    f2(X0 + 24, 840, X0 + 64, 2810, 980, 2090, M.dark);                         // 85" TV
+    // floating console with a darker top + waterfall end at the window seat
+    f2(X0, Z0 + R, X0 + D, ZC, 200, TY - TT, LT);                                // body
+    for (let z = Z0 + R + 10; z < ZC - 300; z += 570) { f2(X0 + D, z, X0 + D + 4, z + 560, 205, TY - TT - 5, LT); f2(X0 + D + 2, z + 200, X0 + D + 8, z + 360, TY - TT - 30, TY - TT - 18, DK); }   // push fronts + grips
+    f2(X0 + 20, Z0 + R + 20, X0 + D - 20, ZC - 20, 190, 200, M.glow);            // LED under the console
+    f2(X0, Z0 + R, X0 + D, ZC, TY - TT, TY, DK);                                 // top
+    { const q = new THREE.Mesh(new THREE.CylinderGeometry(R, R, D, 32, 1, false, Math.PI / 2, Math.PI / 2), DK); q.rotation.z = Math.PI / 2; q.position.set(X0 + D / 2, TY - R, Z0 + R); G.add(q);
+      const qi = new THREE.Mesh(new THREE.CylinderGeometry(R - TT, R - TT, D + 2, 32, 1, false, Math.PI / 2, Math.PI / 2), CR); qi.rotation.z = Math.PI / 2; qi.position.set(X0 + D / 2, TY - R, Z0 + R + 0.5); G.add(qi); }
+    f2(X0, Z0, X0 + D, Z0 + TT, 0, TY - R, DK);                                  // waterfall side to the floor
+    // corner column: closed base, lit open niche (darker lining), cabinet to the ceiling
+    f2(X0, ZC, X0 + 380, ZE, 0, 760, CR); f2(X0 + 380, ZC + 3, X0 + 398, ZE - 3, 10, 750, LT); f2(X0 + 398, ZC + 60, X0 + 410, ZC + 72, 400, 700, CH);
+    f2(X0, ZC, X0 + 380, ZC + 20, 760, CB, DK); f2(X0, ZE - 20, X0 + 380, ZE, 760, CB, DK); f2(X0, ZC, X0 + 15, ZE, 760, CB, DK);
+    f2(X0, ZC, X0 + 380, ZE, 760, 780, DK); f2(X0 + 15, ZC + 20, X0 + 380, ZE - 20, 1500, 1518, DK);
+    for (const y of [1490, CB - 12]) f2(X0 + 340, ZC + 30, X0 + 350, ZE - 30, y, y + 8, M.glow);
+    f2(X0, ZC, X0 + 380, ZE, CB, CT, CR); f2(X0 + 380, ZC + 3, X0 + 398, ZE - 3, CB + 3, CT - 4, LT);
+    c2(X0 + 190, 780, ZC + 260, 220, 60, W.vase[1]); f2(X0 + 60, ZC + 120, X0 + 300, ZC + 330, 1518, 1560, W.book[0]); c2(X0 + 200, 1560, ZE - 150, 140, 45, W.vase[2]);
+    f2(X0 + 120, 1400, X0 + 340, 1650, TY, TY + 30, W.book[1]); c2(X0 + 230, TY, 2600, 200, 50, W.vase[0]);   // console styling
+  }
   // --- sofa-cum-bed on the 8 ft wall (z 3575), facing the windows
+  const SOF = kc(0xcfc4b5, 0.95), SCU = kc(0xe8e1d6, 0.95);
   const SZ = 3575, v2Shut = [
-    r2(1000, SZ - 860, 2500, SZ, 0, 450, 40, M.fabric), r2(1000, SZ - 225, 2500, SZ, 450, 850, 60, M.fabric),
-    r2(1000, SZ - 860, 1110, SZ, 450, 620, 40, M.fabric), r2(2390, SZ - 860, 2500, SZ, 450, 620, 40, M.fabric),
-    r2(1130, SZ - 850, 1740, SZ - 235, 450, 530, 30, M.cushion), r2(1760, SZ - 850, 2370, SZ - 235, 450, 530, 30, M.cushion),
+    r2(1000, SZ - 860, 2500, SZ, 0, 450, 40, SOF), r2(1000, SZ - 225, 2500, SZ, 450, 850, 60, SOF),
+    r2(1000, SZ - 860, 1110, SZ, 450, 620, 40, SOF), r2(2390, SZ - 860, 2500, SZ, 450, 620, 40, SOF),
+    r2(1130, SZ - 850, 1740, SZ - 235, 450, 530, 30, SCU), r2(1760, SZ - 850, 2370, SZ - 235, 450, 530, 30, SCU),
   ];
-  const sheetV = mat(0xe9dfcf, { roughness: 0.95 }), duvetV = mat(0xd8cdbd, { roughness: 1 }), throwV = mat(0x7d8f70, { roughness: 1 });
+  const sheetV = mat(0xe9dfcf, { roughness: 0.95 }), duvetV = mat(0xd8cdbd, { roughness: 1 }), throwV = kc(0xa69888, 1);
   const v2Open = [
-    r2(1000, SZ - 225, 2500, SZ, 0, 850, 50, M.fabric),                              // backrest stays as the headboard
-    r2(1030, SZ - 2150, 2470, SZ - 225, 0, 300, 30, M.fabric),                       // pulled-out frame
+    r2(1000, SZ - 225, 2500, SZ, 0, 850, 50, SOF),                              // backrest stays as the headboard
+    r2(1030, SZ - 2150, 2470, SZ - 225, 0, 300, 30, SOF),                       // pulled-out frame
     r2(1050, SZ - 2135, 2450, SZ - 240, 300, 440, 40, sheetV),                       // mattress in a sheet
     r2(1080, SZ - 1650, 2420, SZ - 250, 440, 480, 30, duvetV),                       // duvet, folded back at the top
     r2(1080, SZ - 2050, 2420, SZ - 1700, 440, 470, 20, throwV),                      // throw across the foot
