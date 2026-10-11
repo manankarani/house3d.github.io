@@ -781,47 +781,60 @@ livingV2.visible = false;
     r2(RX1 + 20, z1 + 30, RX1 + 90, z2 - 30, 120, 400, 30, teal);                             // footrest front (tucked)
   }
   for (const [z1, z2] of [[RZ1, RZ1 + 150], [RZ2 - 150, RZ2]]) r2(RX1 + 80, z1, RX2, z2, 0, 700, 70, teal);   // plump arms
-  // --- oval centre table close to the recliner (clear of the footrests): honed travertine top on a
-  // fluted walnut drum
-  { const trav = DK, flute = LT;
-    const top = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 40, 48), trav); top.scale.set(300, 1, 560); top.position.set(3250, 400, 2030); top.castShadow = true; G.add(top);
-    const base = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 380, 48), flute); base.scale.set(170, 1, 400); base.position.set(3250, 190, 2030); base.castShadow = true; G.add(base);
-    c2(3250, 420, 1850, 220, 60, W.vase[1]); f2(3160, 2150, 3360, 2400, 420, 450, W.book[1]); f2(3170, 2160, 3350, 2390, 450, 470, W.book[0]);
+  // --- centre table (ref 2): rounded-rectangle, glossy light marble top with a thin darker-taupe edge
+  // band, cream drawer body with push drawers on both long sides, recessed dark plinth with LED glow.
+  { const CX = 3250, CZ = 2030, TW = 700, L = 1200, H = 400;
+    const marbleT = kc(0xffffff, 0.15); marbleT.map = canvasTex(256, 256, (g, w, h) => {
+      g.fillStyle = '#efe9e0'; g.fillRect(0, 0, w, h);
+      for (let i = 0; i < 9; i++) { g.strokeStyle = `rgba(${150 + Math.random() * 40},${115 + Math.random() * 30},80,${0.25 + Math.random() * 0.3})`; g.lineWidth = 0.6 + Math.random() * 1.8;
+        g.beginPath(); let x = Math.random() * w, y = 0; g.moveTo(x, y); while (y < h) { x += (Math.random() - 0.5) * 50; y += 18 + Math.random() * 26; g.lineTo(x, y); } g.stroke(); } });
+    const rb = (w, h, d, x, y, z, r, m) => { const o = new THREE.Mesh(new RoundedBoxGeometry(w, h, d, 6, r), m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; G.add(o); return o; };
+    rb(TW - 120, 60, L - 120, CX, 30, CZ, 25, M.dark);                            // recessed plinth
+    f2(CX - TW / 2 + 70, CZ - L / 2 + 70, CX + TW / 2 - 70, CZ + L / 2 - 70, 58, 62, M.glow);
+    rb(TW - 40, H - 120, L - 40, CX, 60 + (H - 120) / 2, CZ, 70, CR);             // cream body
+    for (const s of [-1, 1]) for (let k = 0; k < 3; k++) {                          // push drawers, both long sides
+      const z0 = CZ - (L - 140) / 2 + k * (L - 140) / 3;
+      f2(CX + s * (TW / 2 - 20) - (s > 0 ? 0 : 3), z0 + 4, CX + s * (TW / 2 - 20) + (s > 0 ? 3 : 0), z0 + (L - 140) / 3 - 4, 80, H - 70, kc(0xddd4c7)); }
+    rb(TW + 10, 22, L + 10, CX, H - 49, CZ, 60, DK);                               // darker edge band
+    rb(TW, 28, L, CX, H - 24, CZ, 60, marbleT);                                    // glossy marble top
+    c2(CX - 120, H - 10, CZ - 300, 260, 45, CH);                                 // brass sculpture
+    f2(CX - 80, CZ + 40, CX + 140, CZ + 300, H - 10, H + 15, W.book[0]);
+    { const tr = new THREE.Mesh(new THREE.CylinderGeometry(160, 160, 12, 40), CH); tr.position.set(CX + 60, H - 4, CZ + 380); G.add(tr);
+      c2(CX + 20, H + 2, CZ + 350, 80, 40, kc(0xf3f0ea)); c2(CX + 110, H + 2, CZ + 420, 80, 40, kc(0xf3f0ea)); }
   }
-  // --- TV wall (west, face x 75, z 625-3575) in the bedroom-desk language and kitchen colours:
-  // darker-taupe back panel with LED, light-taupe cabinets to the ceiling with curved corners where the
-  // doors meet, floating console with a darker top that curves down to the floor at the window-seat end,
-  // and a full-height corner column with a lit, darker-lined open niche.
-  { const X0 = 75, Z0 = 625, ZC = 3050, ZE = 3575, CT = 2860, CB = 2250, D = 450, TY = 560, TT = 40, R = 120;
-    const ext = (shape, d) => new THREE.ExtrudeGeometry(shape, { depth: d, bevelEnabled: false });
-    f2(X0, Z0, X0 + 12, ZC, 560, CB, DK);                                       // back panel
-    f2(X0 + 12, Z0 + 20, X0 + 22, ZC - 20, CB - 8, CB, M.glow);                 // LED under the cabinets
-    f2(X0, Z0, X0 + 360, ZC, CB, CT, CR);                                       // upper cabinet carcass
-    const n = 4, w = (ZC - Z0) / n;
-    for (let i = 0; i < n; i++) {                                               // doors, curved bottom corner at each pair's seam
-      const a = Z0 + i * w + 2, ww = w - 4, rr = 110, g = new THREE.Shape(), right = i % 2 === 0;
-      g.moveTo(0, 0);
-      if (right) { g.lineTo(ww - rr, 0); g.absarc(ww - rr, rr, rr, 1.5 * Math.PI, 2 * Math.PI, false); g.lineTo(ww, CT - CB - 6); g.lineTo(0, CT - CB - 6); }
-      else { g.lineTo(ww, 0); g.lineTo(ww, CT - CB - 6); g.lineTo(0, CT - CB - 6); g.lineTo(0, rr); g.absarc(rr, rr, rr, Math.PI, 1.5 * Math.PI, false); }
-      const m = new THREE.Mesh(ext(g, 18), LT); m.rotation.y = -Math.PI / 2; m.position.set(X0 + 378, CB + 3, a); G.add(m);
+  // --- TV wall (ref 1) on the west wall (face x 75, z 625-3575): full-height panelled wall in light
+  // taupe with an LED cove at the top, two darker-taupe fluted panels flanking the TV edged by thin
+  // champagne strips, 85" TV on a recessed darker panel, long floating 4-drawer console with an LED glow
+  // underneath, lamp + plant on top.
+  { const X0 = 75, Z0 = 625, ZE = 3575, CT = 2860, ZM = (Z0 + ZE) / 2;
+    const fl = kc(0xffffff, 0.6); fl.map = canvasTex(128, 16, (g, w, h) => { for (let x = 0; x < w; x += 16) { const gr = g.createLinearGradient(x, 0, x + 16, 0);
+      gr.addColorStop(0, '#8f8172'); gr.addColorStop(0.5, '#b7a896'); gr.addColorStop(1, '#8f8172'); g.fillStyle = gr; g.fillRect(x, 0, 16, h); } });
+    fl.map.wrapS = THREE.RepeatWrapping; fl.map.repeat.set(3, 1);
+    f2(X0, Z0, X0 + 30, ZE, 0, CT, LT);                                          // panelled wall
+    for (const z of [Z0 + 420, ZE - 420]) f2(X0 + 30, z - 2, X0 + 33, z + 2, 0, CT, kc(0xbfb3a4));   // panel joints
+    f2(X0 + 30, Z0, X0 + 60, ZE, CT - 40, CT, LT); f2(X0 + 32, Z0, X0 + 36, ZE, CT - 46, CT - 40, M.glow);   // LED cove at the top
+    const FW = 420;
+    for (const [a, b] of [[ZM - 1050 - FW, ZM - 1050], [ZM + 1050, ZM + 1050 + FW]]) {
+      f2(X0 + 30, a, X0 + 50, b, 0, CT - 40, fl);                                 // fluted panel
+      for (const z of [a - 12, b + 4]) f2(X0 + 30, z, X0 + 54, z + 8, 0, CT - 40, CH);   // champagne strips
     }
-    f2(X0 + 24, 840, X0 + 64, 2810, 980, 2090, M.dark);                         // 85" TV
-    // floating console with a darker top + waterfall end at the window seat
-    f2(X0, Z0 + R, X0 + D, ZC, 200, TY - TT, LT);                                // body
-    for (let z = Z0 + R + 10; z < ZC - 300; z += 570) { f2(X0 + D, z, X0 + D + 4, z + 560, 205, TY - TT - 5, LT); f2(X0 + D + 2, z + 200, X0 + D + 8, z + 360, TY - TT - 30, TY - TT - 18, DK); }   // push fronts + grips
-    f2(X0 + 20, Z0 + R + 20, X0 + D - 20, ZC - 20, 190, 200, M.glow);            // LED under the console
-    f2(X0, Z0 + R, X0 + D, ZC, TY - TT, TY, DK);                                 // top
-    { const q = new THREE.Mesh(new THREE.CylinderGeometry(R, R, D, 32, 1, false, Math.PI / 2, Math.PI / 2), DK); q.rotation.z = Math.PI / 2; q.position.set(X0 + D / 2, TY - R, Z0 + R); G.add(q);
-      const qi = new THREE.Mesh(new THREE.CylinderGeometry(R - TT, R - TT, D + 2, 32, 1, false, Math.PI / 2, Math.PI / 2), CR); qi.rotation.z = Math.PI / 2; qi.position.set(X0 + D / 2, TY - R, Z0 + R + 0.5); G.add(qi); }
-    f2(X0, Z0, X0 + D, Z0 + TT, 0, TY - R, DK);                                  // waterfall side to the floor
-    // corner column: closed base, lit open niche (darker lining), cabinet to the ceiling
-    f2(X0, ZC, X0 + 380, ZE, 0, 760, CR); f2(X0 + 380, ZC + 3, X0 + 398, ZE - 3, 10, 750, LT); f2(X0 + 398, ZC + 60, X0 + 410, ZC + 72, 400, 700, CH);
-    f2(X0, ZC, X0 + 380, ZC + 20, 760, CB, DK); f2(X0, ZE - 20, X0 + 380, ZE, 760, CB, DK); f2(X0, ZC, X0 + 15, ZE, 760, CB, DK);
-    f2(X0, ZC, X0 + 380, ZE, 760, 780, DK); f2(X0 + 15, ZC + 20, X0 + 380, ZE - 20, 1500, 1518, DK);
-    for (const y of [1490, CB - 12]) f2(X0 + 340, ZC + 30, X0 + 350, ZE - 30, y, y + 8, M.glow);
-    f2(X0, ZC, X0 + 380, ZE, CB, CT, CR); f2(X0 + 380, ZC + 3, X0 + 398, ZE - 3, CB + 3, CT - 4, LT);
-    c2(X0 + 190, 780, ZC + 260, 220, 60, W.vase[1]); f2(X0 + 60, ZC + 120, X0 + 300, ZC + 330, 1518, 1560, W.book[0]); c2(X0 + 200, 1560, ZE - 150, 140, 45, W.vase[2]);
-    f2(X0 + 120, 1400, X0 + 340, 1650, TY, TY + 30, W.book[1]); c2(X0 + 230, TY, 2600, 200, 50, W.vase[0]);   // console styling
+    f2(X0 + 30, ZM - 1040, X0 + 42, ZM + 1040, 760, 2300, DK);                  // recessed darker TV panel
+    f2(X0 + 42, ZM - 950, X0 + 82, ZM + 950, 960, 2040, M.dark);                // 85" TV
+    // floating console, 4 drawers, LED underneath
+    const CZ1 = Z0 + 120, CZ2 = ZE - 120, D = 450;
+    f2(X0 + 30, CZ1, X0 + D, CZ2, 300, 560, DK);
+    const nd = 4, dw = (CZ2 - CZ1) / nd;
+    for (let i = 0; i < nd; i++) { const a = CZ1 + i * dw + 3, b = a + dw - 6;
+      f2(X0 + D, a, X0 + D + 18, b, 305, 545, kc(0xb3a595)); f2(X0 + D + 18, (a + b) / 2 - 120, X0 + D + 22, (a + b) / 2 + 120, 520, 528, CH); }
+    f2(X0 + 30, CZ1, X0 + D + 20, CZ2, 560, 580, CH);                             // thin champagne top edge
+    f2(X0 + 40, CZ1 + 30, X0 + D - 30, CZ2 - 30, 290, 300, M.glow);               // LED under
+    // styling: lamp, plant, books, bowl
+    c2(X0 + 230, 580, CZ1 + 260, 260, 30, CH);
+    { const sh = new THREE.Mesh(new THREE.SphereGeometry(110, 24, 16, 0, Math.PI * 2, 0, Math.PI / 2), kc(0xfff1dc)); sh.material.emissive = new THREE.Color(0xffd9a0); sh.material.emissiveIntensity = 1.6; sh.position.set(X0 + 230, 840, CZ1 + 260); G.add(sh); }
+    f2(X0 + 120, CZ1 + 520, X0 + 340, CZ1 + 760, 580, 620, W.book[1]);
+    c2(X0 + 230, 580, CZ2 - 350, 220, 70, kc(0x2f2f33, 0.3));
+    for (let k = 0; k < 7; k++) { const l = new THREE.Mesh(new THREE.SphereGeometry(80, 8, 6), kc(0x5f7a4a, 1)); l.scale.set(0.6, 1.4, 0.6); l.position.set(X0 + 230 + Math.cos(k) * 70, 900 + (k % 3) * 120, CZ2 - 350 + Math.sin(k * 2) * 70); G.add(l); }
+    c2(X0 + 230, 580, ZM + 400, 60, 120, DK);
   }
   // --- sofa-cum-bed on the 8 ft wall (z 3575), facing the windows
   const SOF = kc(0xcfc4b5, 0.95), SCU = kc(0xe8e1d6, 0.95);
