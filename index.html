@@ -755,20 +755,75 @@ livingV2.visible = false;
 
   // --- joined window seat, wall to the mandir (x 75-4612)
   f2(75, 75, 4400, 625, 0, 330, LT); f2(75, 600, 4400, 625, 0, 330, DK); r2(90, 85, 4390, 620, 330, 460, 45, kc(0xece6dc, 0.95));   // rounded boucle cushion   // ends 518 before the mandir: standing space
-  // --- mandir on the east wall in the window corner (z 75-989, 457 deep), faces west: you face east
-  { const F = 4918, B = 5375, Z1 = 75, Z2 = 989, MID = (Z1 + Z2) / 2;
-    f2(F, Z1, B, Z1 + 30, 0, 2870, oakV); f2(F, Z2 - 30, B, Z2, 0, 2870, oakV);
-    f2(F + 20, Z1 + 30, B, Z2 - 30, 0, 80, M.dark);
-    for (const [y0, y1] of [[90, 400], [410, 740]]) f2(F, Z1 + 32, F + 18, Z2 - 32, y0, y1, oakV);   // 2 drawers
-    f2(F - 30, Z1 + 30, B, Z2 - 30, 750, 790, W.corian);                                            // diya ledge
-    f2(B - 40, Z1 + 30, B, Z2 - 30, 790, 1900, W.jali);                                             // jali back
-    f2(B - 300, MID - 150, B - 50, MID + 150, 790, 950, W.corian);                                  // pedestal
-    for (const z of [Z1 + 30, Z2 - 48]) f2(F + 10, z, B - 60, z + 18, 790, 1900, oakV);            // pocket doors, retracted
-    f2(F + 20, Z1 + 30, F + 40, Z2 - 30, 1890, 1900, M.glow);
-    f2(F, Z1 + 30, B, Z2 - 30, 1900, 2600, W.corian);                                               // crown
-    [[640, 1940, 2100], [460, 2100, 2240], [300, 2240, 2360], [160, 2360, 2450]].forEach(([w, y0, y1]) => f2(F - 15, MID - w / 2, F, MID + w / 2, y0, y1, W.corian));
-    c2(F - 40, 2450, MID, 70, 45, W.brass);
-    f2(F, Z1 + 30, F + 18, Z2 - 30, 2610, 2860, oakV);                                               // loft
+  // --- glass-enclosed mandir in the window corner (refs: walk-in glass mandir rooms), sized to the
+  // 30 in solid wall: x 4620-5375, z 75-1000. Bronze-framed glass on the two open sides with a full-height
+  // hinged glass door (opens with "Wardrobes open"), oak floor platform, dark-taupe ceiling with spots.
+  // Inside on the back (east) wall, over a white drawer base: Jain mandir (white arch, backlit jali,
+  // marble murti) and Devi mandir (arch with red-gold backdrop, chunri, brass diyas). You face east.
+  { const X1 = 4620, X2 = 5375, Z1 = 75, Z2 = 1000, TOPY = 2700, TOPF = 2880;
+    const bronze = kc(0x6b5a46, 0.35); bronze.metalness = 0.6;
+    const glassM = kc(0xe7e2d8, 0.05); glassM.transparent = true; glassM.opacity = 0.22;
+    const wht = kc(0xf4f1ec, 0.4), oakF = kc(0xc39a6b, 0.5), marble = kc(0xf7f5f0, 0.25), gold = kc(0xc9a45c, 0.3); gold.metalness = 0.8;
+    // platform + ceiling
+    f2(X1 + 20, Z1, X2, Z2 - 20, 0, 60, oakF);
+    for (let z = Z1 + 60; z < Z2 - 40; z += 120) f2(X1 + 22, z, X2, z + 3, 60, 61, kc(0xa98258));   // plank lines
+    f2(X1 + 20, Z1, X2, Z2 - 20, TOPY, TOPY + 20, DK);
+    for (const [x, z] of [[4850, 300], [4850, 780], [5150, 540]]) f2(x - 35, z - 35, x + 35, z + 35, TOPY - 3, TOPY, M.glow);
+    f2(X1 - 20, Z1, X2, Z2 + 20, TOPY + 20, TOPF, DK);                          // fascia to the false ceiling
+    // bronze frame: corner posts + top and bottom rails
+    for (const [x, z] of [[X1, Z1 + 20], [X1, Z2], [X2 - 20, Z2]]) f2(x - 20, z - 20, x + 20, z + 20, 0, TOPY + 20, bronze);
+    f2(X1 - 20, Z1, X1 + 20, Z2 + 20, TOPY, TOPY + 20, bronze); f2(X1 - 20, Z1, X1 + 20, Z2 + 20, 0, 20, bronze);
+    f2(X1 - 20, Z2 - 20, X2, Z2 + 20, TOPY, TOPY + 20, bronze); f2(X1 - 20, Z2 - 20, X2, Z2 + 20, 0, 20, bronze);
+    // fixed glass, west face (two panes with a bronze mullion)
+    const ZM = (Z1 + Z2) / 2;
+    f2(X1 - 6, Z1 + 40, X1 + 6, ZM - 15, 20, TOPY, glassM); f2(X1 - 6, ZM + 15, X1 + 6, Z2 - 20, 20, TOPY, glassM);
+    f2(X1 - 15, ZM - 15, X1 + 15, ZM + 15, 20, TOPY, bronze);
+    // south face: fixed pane + full-height glass door
+    const DX = X1 + 280;
+    f2(X1 + 20, Z2 - 6, DX - 15, Z2 + 6, 20, TOPY, glassM); f2(DX - 15, Z2 - 15, DX + 15, Z2 + 15, 20, TOPY, bronze);
+    { const g = new THREE.Group(); g.position.set(DX + 15, 0, Z2); G.add(g);
+      const w = X2 - 20 - (DX + 15) - 10;
+      box(w, TOPY - 50, 12, w / 2, (TOPY + 20) / 2, 0, glassM, g);
+      for (const [x, ww] of [[12, 24], [w - 12, 24]]) box(ww, TOPY - 50, 30, x, (TOPY + 20) / 2, 0, bronze, g);
+      box(w, 30, 30, w / 2, 40, 0, bronze, g); box(w, 30, 30, w / 2, TOPY - 15, 0, bronze, g);
+      box(18, 600, 18, w - 60, 1100, 30, gold, g);                              // long pull
+      wardrobeDoors.push({ g, open: 1.25 }); }   // swings inward, clear of the recliner
+    // drawer base on the back wall (450 deep), Corian top
+    const BX = X2 - 450;
+    f2(BX, Z1 + 30, X2, Z2 - 40, 60, 750, wht);
+    for (const [y0, y1] of [[80, 400], [410, 730]]) for (const [a, b] of [[Z1 + 40, ZM - 3], [ZM + 3, Z2 - 50]]) {
+      f2(BX - 14, a, BX, b, y0, y1, wht); f2(BX - 22, (a + b) / 2 - 15, BX - 14, (a + b) / 2 + 15, y1 - 60, y1 - 30, gold); }
+    f2(BX - 20, Z1 + 30, X2, Z2 - 40, 750, 790, marble);
+    // arched front panel with the two niches (shape in z,y; extruded toward the wall)
+    const PX = X2 - 160, W = Z2 - 40 - (Z1 + 30), NW = 360, R = NW / 2, NB = 790, NT = 2150;
+    { const sh = new THREE.Shape([[0, NB], [W, NB], [W, TOPY], [0, TOPY]].map(p => new THREE.Vector2(...p)));
+      for (const c of [W * 0.27, W * 0.73]) { const h = new THREE.Path(); h.moveTo(c - R, NB); h.lineTo(c + R, NB); h.lineTo(c + R, NT - R);
+        h.absarc(c, NT - R, R, 0, Math.PI, false); h.lineTo(c - R, NB); sh.holes.push(h); }
+      const m = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: 25, bevelEnabled: false }), wht);
+      m.rotation.y = Math.PI / 2; m.position.set(PX, 0, Z2 - 40); m.castShadow = true; G.add(m); }   // local x -> world -z
+    const zJ = Z2 - 40 - W * 0.27, zD = Z2 - 40 - W * 0.73;                     // niche centres (z)
+    f2(PX + 25, Z1 + 30, X2, Z2 - 40, NB, NB + 8, marble);
+    // Jain niche: backlit jali, white marble seated murti on a pedestal, small chhatra
+    f2(X2 - 30, zJ - R, X2 - 10, zJ + R, NB, NT, W.jali);
+    f2(X2 - 130, zJ - 110, X2 - 40, zJ + 110, NB + 8, NB + 130, marble);
+    { const b = new THREE.Mesh(new THREE.SphereGeometry(70, 20, 14), marble); b.scale.set(1, 0.6, 1.2); b.position.set(X2 - 85, NB + 175, zJ); G.add(b);
+      const t = new THREE.Mesh(new THREE.SphereGeometry(42, 16, 12), marble); t.scale.set(0.8, 1.1, 0.8); t.position.set(X2 - 85, NB + 260, zJ); G.add(t);
+      const hd = new THREE.Mesh(new THREE.SphereGeometry(30, 16, 12), marble); hd.position.set(X2 - 85, NB + 330, zJ); G.add(hd);
+      const ch = new THREE.Mesh(new THREE.ConeGeometry(70, 50, 24), gold); ch.position.set(X2 - 85, NB + 450, zJ); G.add(ch); }
+    // Devi niche: red-gold backdrop with a halo, small brass murti, red chunri, two diyas
+    f2(X2 - 30, zD - R, X2 - 10, zD + R, NB, NT, kc(0xffffff, 0.5));
+    { const bd = G.children[G.children.length - 1]; bd.material = kc(0xffffff, 0.5); bd.material.map = canvasTex(128, 256, (g, w, h) => {
+        g.fillStyle = '#8c1d1d'; g.fillRect(0, 0, w, h); g.strokeStyle = '#d6a84a'; g.lineWidth = 3;
+        for (let y = 20; y < h; y += 24) { g.beginPath(); for (let x = 0; x <= w; x += 8) g.lineTo(x, y + Math.sin(x / 8) * 4); g.stroke(); }
+        g.fillStyle = 'rgba(255,210,120,.85)'; g.beginPath(); g.arc(w / 2, h * 0.42, 34, 0, 7); g.fill(); });
+      bd.material.emissive = new THREE.Color(0x3a0c08); }
+    f2(X2 - 130, zD - 110, X2 - 40, zD + 110, NB + 8, NB + 100, kc(0xb22222, 0.9));   // chunri-draped pedestal
+    { const b = new THREE.Mesh(new THREE.ConeGeometry(55, 220, 20), gold); b.position.set(X2 - 85, NB + 210, zD); G.add(b);
+      const hd = new THREE.Mesh(new THREE.SphereGeometry(32, 16, 12), gold); hd.position.set(X2 - 85, NB + 340, zD); G.add(hd);
+      const cr = new THREE.Mesh(new THREE.ConeGeometry(26, 50, 12), gold); cr.position.set(X2 - 85, NB + 395, zD); G.add(cr); }
+    for (const dz of [-130, 130]) { c2(BX + 60, 790, zD + dz, 25, 35, gold); const f = new THREE.Mesh(new THREE.SphereGeometry(12, 10, 8), kc(0xffd27a)); f.material.emissive = new THREE.Color(0xffb040); f.material.emissiveIntensity = 2; f.position.set(BX + 60, 835, zD + dz); G.add(f); }
+    f2(BX + 20, ZM - 150, BX + 220, ZM + 150, 790, 800, gold);                  // puja thali on the ledge
+    for (const z of [zJ, zD]) f2(PX - 3, z - R + 20, PX, z + R - 20, NT + 30, NT + 40, M.glow);   // light over each arch
   }
   // --- recliner (same place as v1, backed onto the low storage), softened: rounded body, pillow back, plump arms
   const teal = kc(0x8e7f70, 0.6);   // darker-taupe leather (kitchen family)
