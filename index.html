@@ -81,6 +81,7 @@
     <label class="row"><span>Bedroom sheer blinds down</span><input type="checkbox" class="switch" id="blindT"></label>
     <div class="row"><span>Kitchen finish</span><select id="kfin" style="width:auto"><option value="cloud" selected>Cloud Dancer</option><option value="charcoal">Charcoal & walnut</option><option value="sage">Sage & brass</option><option value="greige">Greige & white</option></select></div>
     <label class="row"><span>Kitchen drawers open</span><input type="checkbox" class="switch" id="kdrT"></label>
+    <label class="row"><span>Dressing mirror open</span><input type="checkbox" class="switch" id="mirT"></label>
     <label class="row"><span>Imagine: refuge drying</span><input type="checkbox" class="switch" id="refugeT" checked></label>
   </section>
   <section>
@@ -1402,8 +1403,9 @@ wardrobe(7950, 10225, 4365, 1, 2880, 2);                // top wall: 5 bays, lit
   //              before the door swing; 833 clear strip along the pillar to the window.
   {
     const keep = m => { m.userData.keepColor = true; return m; };
-    const oat = keep(mat(0xe8dfd2, { roughness: 0.7 })), oak = keep(mat(0xc8a882, { roughness: 0.55 }));
-    const body = keep(mat(0xd8cfc2)), champ = keep(mat(0xc8ae84, { metalness: 0.75, roughness: 0.3 }));
+    // joinery in the kitchen's finishes (follows the Kitchen finish dropdown): taupe shutters, greige lofts, bronze grooves, quartz top
+    const oat = K.base, loftM = K.upper, pullM = K.gola, oak = keep(mat(0xc8a882, { roughness: 0.55 }));
+    const body = K.carc, champ = keep(mat(0xc8ae84, { metalness: 0.75, roughness: 0.3 }));
     const ivory = keep(mat(0xf3eee6, { roughness: 0.95 })), linenM = keep(mat(0xdcd2c3, { roughness: 1 }));
     const sage = keep(mat(0xb3bca6, { roughness: 1 })), clay = keep(mat(0xcf9a7c, { roughness: 0.9 }));
     const mirror = keep(mat(0xe6eef0, { metalness: 0.9, roughness: 0.04 }));
@@ -1416,16 +1418,16 @@ wardrobe(7950, 10225, 4365, 1, 2880, 2);                // top wall: 5 bays, lit
     for (let i = 0; i < np; i++) {
       const a = WX1 + i * pw - (i ? 15 : 0), b = WX1 + (i + 1) * pw, zf = WZ - (i % 2 ? 18 : 40);   // two tracks, panels overlap
       fb(a, zf, b, zf + 20, 90, 2380, oat);
-      fb(i % 2 ? a + 30 : b - 42, zf - 14, (i % 2 ? a + 30 : b - 42) + 12, zf, 800, 1800, oak);   // long recessed pull
+      fb(i % 2 ? a + 30 : b - 42, zf - 14, (i % 2 ? a + 30 : b - 42) + 12, zf, 800, 1800, pullM);   // long recessed pull
     }
     fb(WX1, WZ - 42, E, WZ, 2380, 2400, M.dark);                               // top track
-    for (let i = 0; i < 4; i++) fb(WX1 + i * (E - WX1) / 4 + 2, WZ - 18, WX1 + (i + 1) * (E - WX1) / 4 - 2, WZ, 2400, TOP - 4, oat);   // loft doors
+    for (let i = 0; i < 4; i++) fb(WX1 + i * (E - WX1) / 4 + 2, WZ - 18, WX1 + (i + 1) * (E - WX1) / 4 - 2, WZ, 2400, TOP - 4, loftM);   // loft doors
     // --- dressing unit on the west wall (z 1610-2170)
     const DZ1 = 1610, DZ2 = 2170, DT = W + 450;
-    fb(W, DZ1, DT, DZ2, 700, 740, oak);
+    fb(W, DZ1, DT, DZ2, 700, 740, K.quartz);                                  // quartz top, as in the kitchen
     fb(W, DZ1 + 10, DT - 10, DZ2 - 10, 560, 700, oat);
     fb(DT - 10, (DZ1 + DZ2) / 2 - 2, DT, (DZ1 + DZ2) / 2 + 2, 570, 690, M.dark);
-    for (const z of [DZ1 + 120, DZ2 - 120]) fb(DT - 6, z - 50, DT, z + 50, 650, 660, champ);
+    for (const z of [DZ1 + 120, DZ2 - 120]) fb(DT - 6, z - 50, DT, z + 50, 650, 660, pullM);
     const MC = W + 180;
     fb(W, DZ1, MC, DZ2, 900, 2380, body);
     for (const y of [1150, 1450, 1750, 2050]) fb(W + 10, DZ1 + 10, MC - 10, DZ2 - 10, y, y + 12, ivory);
@@ -1437,7 +1439,7 @@ wardrobe(7950, 10225, 4365, 1, 2880, 2);                // top wall: 5 bays, lit
     box(18, 1470, DZ2 - DZ1 - 10, 9, 1640, (DZ2 - DZ1 - 10) / 2, oat, md);
     box(4, 1430, DZ2 - DZ1 - 40, 20, 1640, (DZ2 - DZ1 - 10) / 2, mirror, md);
     box(6, 1470, 6, 21, 1640, DZ2 - DZ1 - 30, glow, md);
-    doors.push({ leaf: md, swing: 1 });
+    window.dressMirror = md;                                                // own switch, closed by default
     fb(W, DZ1 - 10, DT + 40, DZ1, 0, 2380, oat); fb(W, DZ2, DT + 40, DZ2 + 10, 0, 2380, oat);
     { const st = new THREE.Mesh(new THREE.CylinderGeometry(190, 170, 430, 32), keep(mat(0xe2d6c4, { roughness: 1 })));
       st.position.set(DT + 260, 215, (DZ1 + DZ2) / 2); st.castShadow = true; furn.add(st); }
@@ -2106,6 +2108,7 @@ $('partT').onchange = e => setPartition(!e.target.checked);
 $('rackT').onchange = e => setRack(e.target.checked);
 $('blindT').onchange = e => setBlind(e.target.checked);
 $('kdrT').onchange = e => setKDrawers(e.target.checked);
+$('mirT').onchange = e => { if (window.dressMirror) window.dressMirror.rotation.y = e.target.checked ? 1.5 : 0; };
 if (/kdr=open/.test(location.hash)) { $('kdrT').checked = true; setKDrawers(true); }   // preview link
 $('kfin').onchange = e => setKitchenFinish(e.target.value);
 $('refugeT').onchange = e => setRefugeDrying(e.target.checked);
