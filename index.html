@@ -74,7 +74,6 @@
   <section>
     <h3>Interior</h3>
     <label class="row"><span>Furnished</span><input type="checkbox" class="switch" id="furnT" checked></label>
-    <label class="row"><span>Living room v2</span><input type="checkbox" class="switch" id="v2T"></label>
     <label class="row"><span>Doors open</span><input type="checkbox" class="switch" id="doorsT" checked></label>
     <label class="row"><span>Windows open</span><input type="checkbox" class="switch" id="windowsT"></label>
     <label class="row"><span>Sofa-cum-bed as bed</span><input type="checkbox" class="switch" id="bedT"></label>
@@ -86,7 +85,7 @@
   </section>
   <section>
     <h3>Partition</h3>
-    <div class="row"><select id="ptype" aria-label="Partition type"><option value="bifold">Bi-fold · 1 track</option><option value="stack">Stacking wall · bay by TV</option><option value="pocket" selected>Pocket · into door wall</option></select></div>
+    <div class="row"><select id="ptype" aria-label="Partition type"><option value="bifold">Bi-fold · 1 track</option><option value="pocket" selected>Pocket · into door wall</option></select></div>
     <label class="row"><span>Closed</span><input type="checkbox" class="switch" id="partT"></label>
   </section>
   <footer>
@@ -601,7 +600,8 @@ const felt = mat(0xffffff, { roughness: 1, map: canvasTex(64, 256, (g, w, h) => 
 }) });
 // Partition: three space-saving systems, picked from the dropdown. All run on the straight-wall
 // line (x 2590) from the window wall (z 75) to the living's lower wall (z 3650), in PET felt.
-const PL = 2590, PZ1 = 75, PZ2 = 3650, PLEN = PZ2 - PZ1, PH = 2450;
+const PL = 2590, PZ1 = 625, PZ2 = 3650,   // starts at the window seat's front edge: the seat stays one piece
+ PLEN = PZ2 - PZ1, PH = 2450;
 const partGroups = {}, partSetters = {};
 const panelGroup = (parent, w, h, t) => {             // one felt panel: local x = thickness, z = width
   const g = new THREE.Group(); parent.add(g);
@@ -651,7 +651,7 @@ const panelGroup = (parent, w, h, t) => {             // one felt panel: local x
   });
 }
 // painted bulkhead above the partition line, from the track (2450) to the ceiling: hides the tracks
-box(200, 3000 - PH, PLEN, PL, PH + (3000 - PH) / 2, PZ1 + PLEN / 2, wallMat, furn);
+const partBulk = box(200, 3000 - PH, PLEN, PL, PH + (3000 - PH) / 2, PZ1 + PLEN / 2, wallMat, furn);
 let partitionOpen = true, partitionType = 'pocket';   // default: pocket into the door wall, open
 const tvShift = 325;                                  // TV unit slides left in stacking mode
 function setPartition(open) {
@@ -672,7 +672,8 @@ setPartition(true);
 const storageShared = furn.children.slice(storStart, storEnd);
 const seatV1 = furn.children.slice(seatStart, tvStart);
 const livingV1 = new THREE.Group(), livingV2 = new THREE.Group();
-for (const c of furn.children.slice(tvStart)) if (!storageShared.includes(c)) livingV1.add(c);
+const partKeep = new Set([...Object.values(partGroups), partBulk]);   // partition now belongs to the v2 room
+for (const c of furn.children.slice(tvStart)) if (!storageShared.includes(c) && !partKeep.has(c)) livingV1.add(c);
 furn.add(livingV1, livingV2);
 livingV2.visible = false;
 {
@@ -710,7 +711,7 @@ livingV2.visible = false;
     f2(F, Z1 + 30, F + 18, Z2 - 30, 2610, 2860, oakV);                                               // loft
   }
   // --- recliner (same place as v1, backed onto the low storage), softened: rounded body, pillow back, plump arms
-  const teal = mat(0xa9d6ca, { roughness: 0.75 });   // light pastel teal-green
+  const teal = mat(0xa8774f, { roughness: 0.55 }); teal.userData.keepColor = true;   // cognac leather (warm palette)
   const RX1 = 3825, RX2 = 4775, RZ1 = 1040, RZ2 = 3020;
   r2(RX1 + 40, RZ1 + 150, RX2, RZ2 - 150, 0, 440, 60, teal);                                 // base
   for (let k = 0; k < 3; k++) {
@@ -1391,57 +1392,85 @@ wardrobe(7950, 10225, 4365, 1, 2880, 2);                // top wall: 5 bays, lit
     fb(7650, 5650, 10000, 7750, 50, 64, rugM);
   }
 
-  // Bedroom 2 (x 8075-11092, z 75-2945; pillar x 8075-8227, z 75-1599; door in the south wall at the
-  // west end, window north). Mirrored reference layout: the east wall carries the tall wardrobe (window
-  // corner, beside the bed) and the desk toward the south wall; with the door on the other side the desk
-  // can sit further down, so the chair stays clear of the bed. Platform bed from the pillar to the wardrobe.
+  // Bedroom 2 (inner x 8075-11092 = 3017, z 75-2945 = 2870; pillar 152 deep on the west wall z 75-1599;
+  // door in the south wall x 8100-8950, swings in against the west wall over z ~2185-2945; window north
+  // x 8680-10860). Mirrored to the west. Nothing in front of the window.
+  //  West wall:  clothes wardrobe z 75-1599 (600 deep, swallows the pillar), then the dressing unit
+  //              z 1610-2170 (table 450 deep + mirror door hiding a makeup cabinet), stopping before
+  //              the door swing.
+  //  South wall: queen bed 1524 x 2032, no headboard, head on the wall at x 9350-10874 (z 913-2945):
+  //              675 aisle to the wardrobe, 838 to the window, floating bedside shelves both sides.
   {
-    const white = mat(0xf2f0eb, { roughness: 0.35 }), body = mat(0xdcd8d0), blk = mat(0x1e1e20, { roughness: 0.4 });
-    const nicheGlow = mat(0xfff3e0, { emissive: 0xffe2b8, emissiveIntensity: 0.45 });
-    const sheer = mat(0xfbf8f2, { transparent: true, opacity: 0.8, roughness: 1, side: THREE.DoubleSide });
-    const drape = mat(0xc9bfb2, { roughness: 1 });
-    const E = 11092, TOPW = 2980;
-    // --- tall wardrobe, east wall, window corner (450 deep), to the ceiling
-    const WB = E, WF = E - 450, WZ1 = 225, WZ2 = 1400;                          // 150 off the window wall for blinds
-    fb(WF + 30, WZ1, WB, WZ2, 0, 80, M.dark); fb(WF, WZ1, WB, WZ2, 80, TOPW, body);
-    const NZ = WZ2 - 360;                                                     // lit niche strip at the bed side
-    fb(WF + 10, NZ, WB - 20, WZ2 - 5, 500, 1900, nicheGlow);
-    fb(WF - 18, NZ, WF, WZ2 - 3, 80, 500, white); fb(WF - 18, NZ, WF, WZ2 - 3, 1900, TOPW - 4, white);
-    for (const [a, b] of [[WZ1 + 3, (WZ1 + NZ) / 2 - 2], [(WZ1 + NZ) / 2 + 2, NZ - 3]]) fb(WF - 18, a, WF, b, 90, TOPW - 4, white);
-    const pm = (WZ1 + NZ) / 2;
-    fb(WF - 32, pm - 40, WF - 18, pm - 28, 800, 1900, blk); fb(WF - 32, pm + 28, WF - 18, pm + 40, 800, 1900, blk);
-    // --- desk on the east wall toward the south wall: top, drawer, cubbies, uppers
-    const DZ1 = 1850, DZ2 = 2800, DF = E - 550, CB = E - 350;
-    fb(DF, DZ1, E, DZ2, 720, 750, white);
-    fb(DF, DZ1 + 400, DF + 20, DZ2 - 20, 600, 720, white); fb(DF - 8, DZ1 + 650, DF, DZ1 + 810, 650, 662, blk);   // drawer
-    fb(CB, DZ1, E, DZ2, 1250, 1270, white); fb(CB, DZ1, E, DZ2, 1550, 1570, white);   // open cubbies
-    for (const z of [DZ1 + 320, DZ1 + 640]) fb(CB, z, E, z + 18, 1270, 1550, white);
-    fb(CB, DZ1, E, DZ2, 1570, TOPW, body);
-    for (const [a, b] of [[DZ1 + 3, (DZ1 + DZ2) / 2 - 2], [(DZ1 + DZ2) / 2 + 2, DZ2 - 3]]) fb(CB - 18, a, CB, b, 1575, TOPW - 4, white);
-    fb(CB, DZ1, CB + 15, DZ2, 1240, 1250, M.glow);
-    fb(E - 80, DZ1 + 150, E - 40, DZ2 - 150, 900, 1230, blk); fb(E - 120, (DZ1 + DZ2) / 2 - 20, E - 80, (DZ1 + DZ2) / 2 + 20, 750, 900, blk);   // monitor
-    fb(E - 380, DZ1 + 250, E - 220, DZ2 - 250, 750, 765, blk);                // keyboard
-    for (let k = 0; k < 4; k++) fb(E - 300 + k * 45, DZ1 + 60, E - 265 + k * 45, DZ1 + 220, 1270, 1480, W.book[k % 3]);
-    cyl(E - 180, 1270, DZ1 + 480, 150, 45, W.vase[2]);
-    const ch = bossChair(DF - 330, (DZ1 + DZ2) / 2, Math.PI / 2); ch.scale.setScalar(0.82);   // faces the desk, clear of the bed
-    // --- platform bed: window wall, pillar to wardrobe, big drawers
-    const PX1 = 8227, PX2 = WF, PZ1 = 225, PZ2 = 1825, PH = 420;               // 150 off the window wall for blinds
-    fb(PX1, PZ1, PX2 - 40, PZ2 - 40, 0, 60, M.dark);
-    fb(PX1, PZ1, PX2, PZ2 - 20, 60, PH, body);
-    const nd = 3, dw = (PX2 - PX1) / nd;
-    for (let k = 0; k < nd; k++) {
-      const a = PX1 + k * dw + 3, b = a + dw - 6;
-      fb(a, PZ2 - 20, b, PZ2, 70, PH - 5, white);
-      const ring = new THREE.Mesh(new THREE.TorusGeometry(22, 5, 8, 20), blk); ring.position.set((a + b) / 2, PH - 90, PZ2 + 6); furn.add(ring);
+    const keep = m => { m.userData.keepColor = true; return m; };
+    const oat = keep(mat(0xe8dfd2, { roughness: 0.7 })), oak = keep(mat(0xc8a882, { roughness: 0.55 }));
+    const body = keep(mat(0xd8cfc2)), champ = keep(mat(0xc8ae84, { metalness: 0.75, roughness: 0.3 }));
+    const ivory = keep(mat(0xf3eee6, { roughness: 0.95 })), linenM = keep(mat(0xdcd2c3, { roughness: 1 }));
+    const sage = keep(mat(0xb3bca6, { roughness: 1 })), clay = keep(mat(0xcf9a7c, { roughness: 0.9 }));
+    const mirror = keep(mat(0xe6eef0, { metalness: 0.9, roughness: 0.04 }));
+    const glow = keep(mat(0xfff1dc, { emissive: 0xffd9a0, emissiveIntensity: 2 }));
+    const W = 8075, TOP = 2980;
+    // --- clothes wardrobe (west wall z 75-1599): 3 hinged doors + loft, oak bar pulls, recessed plinth
+    const WF = W + 600, WZ1 = 75, WZ2 = 1599;
+    fb(W, WZ1, WF - 40, WZ2, 0, 80, M.dark); fb(W, WZ1, WF, WZ2, 80, TOP, body);
+    const nd = 3, dw = (WZ2 - WZ1) / nd;
+    for (let i = 0; i < nd; i++) {
+      const a = WZ1 + i * dw + 2, b = a + dw - 4;
+      fb(WF, a, WF + 18, b, 90, 2380, oat);                                   // door
+      fb(WF, a, WF + 18, b, 2400, TOP - 4, oat);                              // loft door
+      const pz = i === 1 ? a + 40 : b - 40;
+      fb(WF + 18, pz - 6, WF + 34, pz + 6, 800, 1700, oak);                   // long oak pull
     }
-    fb(PX1, PZ1, PX2, PZ2, PH, PH + 10, white);
-    rbox(2000, 160, 1480, PX1 + 1040, PH + 90, (PZ1 + PZ2) / 2 + 10, 50, M.bed);           // mattress, head at the pillar end
-    for (const z of [450, 950]) rbox(420, 120, 460, PX1 + 260, PH + 230, z + 230, 45, M.linen);
-    fb(PX1 + 1100, PZ1 + 40, PX1 + 1850, PZ2 - 40, PH + 170, PH + 185, M.linen);
-    // --- sheer curtain gathered to the west end, soft drape, ceiling track
-    fb(8680, 95, 9350, 115, PH + 40, 2860, sheer);
-    fb(8480, 90, 8680, 130, PH + 40, 2860, drape);
-    fb(8227, 100, WF, 120, 2860, 2880, M.dark);
+    fb(WF - 2, WZ1, WF, WZ2, 2380, 2400, M.dark);                             // shadow line under the loft
+    // --- dressing unit (west wall z 1610-2170): floating table, stool, full-height mirror door that
+    // swings open (Doors switch) onto makeup shelves with a warm light
+    const DZ1 = 1610, DZ2 = 2170, DT = W + 450;
+    fb(W, DZ1, DT, DZ2, 700, 740, oak);                                       // table top
+    fb(W, DZ1 + 10, DT - 10, DZ2 - 10, 560, 700, oat);                        // 2 slim drawers
+    fb(DT - 10, (DZ1 + DZ2) / 2 - 2, DT, (DZ1 + DZ2) / 2 + 2, 570, 690, M.dark);
+    for (const z of [DZ1 + 120, DZ2 - 120]) fb(DT - 6, z - 50, DT, z + 50, 650, 660, champ);
+    const MC = W + 180;                                                         // makeup cabinet 180 deep
+    fb(W, DZ1, MC, DZ2, 900, 2380, body);
+    for (const y of [1150, 1450, 1750, 2050]) fb(W + 10, DZ1 + 10, MC - 10, DZ2 - 10, y, y + 12, ivory);   // glass-edge shelves
+    fb(MC - 12, DZ1 + 15, MC - 6, DZ2 - 15, 2360, 2366, glow);                // cabinet light
+    const pal = [0xb5582e, 0xd9a441, 0xe8d6c6, 0x6b3b3b, 0xc9a7a0, 0x2b2b2b];
+    let k = 0;
+    for (const y of [1162, 1462, 1762]) for (let z = DZ1 + 60; z < DZ2 - 60; z += 70) cyl(W + 90, y, z, 80 + (k % 3) * 40, 22, keep(mat(pal[k++ % pal.length], { roughness: 0.4 })));   // bottles & jars
+    const md = new THREE.Group(); md.position.set(MC, 0, DZ1 + 5); furn.add(md);   // mirror door, hinged at DZ1
+    box(18, 1470, DZ2 - DZ1 - 10, 9, 1640, (DZ2 - DZ1 - 10) / 2, oat, md);
+    box(4, 1430, DZ2 - DZ1 - 40, 20, 1640, (DZ2 - DZ1 - 10) / 2, mirror, md);
+    box(6, 1470, 6, 21, 1640, DZ2 - DZ1 - 30, glow, md);                       // edge-lit mirror strip
+    doors.push({ leaf: md, swing: 1 });
+    fb(W, DZ1 - 10, DT + 40, DZ1, 0, 2380, oat); fb(W, DZ2, DT + 40, DZ2 + 10, 0, 2380, oat);   // side fins frame the niche
+    { const st = new THREE.Mesh(new THREE.CylinderGeometry(190, 170, 430, 32), keep(mat(0xe2d6c4, { roughness: 1 })));
+      st.position.set(DT + 280, 215, (DZ1 + DZ2) / 2); st.castShadow = true; furn.add(st); }   // boucle stool
+    // --- queen bed 1524 x 2032, no headboard: low oak platform, mattress, layered bedding
+    const BX1 = 9350, BX2 = 10874, BZ1 = 913, BZ2 = 2945;
+    fb(BX1 + 60, BZ1 + 60, BX2 - 60, BZ2, 0, 90, M.dark);                      // recessed plinth
+    fb(BX1, BZ1, BX2, BZ2, 90, 320, oak);                                       // platform
+    rbox(BX2 - BX1 - 30, 230, BZ2 - BZ1 - 30, (BX1 + BX2) / 2, 440, (BZ1 + BZ2) / 2 - 10, 60, ivory);   // mattress
+    rbox(BX2 - BX1 + 50, 60, 1450, (BX1 + BX2) / 2, 575, BZ1 + 725, 25, linenM);   // duvet
+    for (const x of [BX1 - 10, BX2 + 10]) rbox(30, 200, 1450, x, 480, BZ1 + 725, 10, linenM);
+    rbox(BX2 - BX1 + 60, 30, 480, (BX1 + BX2) / 2, 615, BZ1 + 300, 12, sage);  // folded throw at the foot
+    for (const x of [BX1 + 380, BX2 - 380]) rbox(620, 160, 400, x, 640, BZ2 - 250, 70, ivory);   // pillows on the wall
+    for (const x of [BX1 + 470, BX2 - 470]) { const c = rbox(380, 380, 120, x, 760, BZ2 - 430, 60, k % 2 ? clay : sage); c.rotation.x = -0.3; k++; }
+    // floating bedside shelves + wall lights (no headboard; art above the bed instead)
+    for (const [x1, x2] of [[BX1 - 300, BX1 - 20], [BX2 + 20, 11092]]) {
+      fb(x1, BZ2 - 320, x2, BZ2, 540, 570, oak);
+      fb(x1, BZ2 - 300, x2, BZ2, 470, 540, oat);
+      const lx = (x1 + x2) / 2;
+      fb(lx - 40, BZ2 - 30, lx + 40, BZ2, 1150, 1250, champ);
+      cyl(lx, 1080, BZ2 - 90, 140, 70, keep(mat(0xf5e6cf, { emissive: 0xffd8a0, emissiveIntensity: 1.3 })));
+    }
+    fb(9550, BZ2 - 25, 10674, BZ2 - 20, 1300, 1950, champ);                    // thin frame
+    fb(9570, BZ2 - 30, 10654, BZ2 - 25, 1320, 1930, keep(mat(0xffffff, { map: canvasTex(256, 160, (g, w, h) => {
+      const gr = g.createLinearGradient(0, 0, w, 0); gr.addColorStop(0, '#e9e1d4'); gr.addColorStop(1, '#cdbfa9'); g.fillStyle = gr; g.fillRect(0, 0, w, h);
+      g.fillStyle = 'rgba(160,120,90,.55)'; g.beginPath(); g.arc(150, 85, 46, 0, 7); g.fill();
+      g.strokeStyle = 'rgba(90,70,55,.6)'; g.lineWidth = 2; g.beginPath(); g.moveTo(30, 120); g.bezierCurveTo(90, 60, 170, 140, 230, 70); g.stroke();
+    }) })));
+    // --- sheer curtain gathered at the east end (window left fully open), rug beside the bed
+    fb(10880, 95, 11060, 115, 200, 2860, keep(mat(0xfbf8f2, { transparent: true, opacity: 0.8, roughness: 1, side: THREE.DoubleSide })));
+    fb(8680, 100, 11092, 120, 2860, 2880, M.dark);
+    fb(8700, 980, 9330, 2700, 50, 62, keep(mat(0xd9cdbb, { roughness: 1 })));
   }
 }
 
@@ -2074,8 +2103,7 @@ $('upperT').onchange = e => { upper.visible = e.target.checked; };
 $('furnT').onchange = e => { furn.visible = e.target.checked; };
 $('doorsT').onchange = e => setDoors(e.target.checked);
 $('windowsT').onchange = e => setWindows(e.target.checked);
-$('v2T').onchange = e => setLivingV2(e.target.checked);
-if (/v2/.test(location.hash)) { $('v2T').checked = true; setLivingV2(true); }   // preview link
+setLivingV2(true);                                   // v1 retired: the living room is the v2 layout
 $('bedT').onchange = e => { sofaOpen.forEach(m => m.visible = e.target.checked); sofaShut.forEach(m => m.visible = !e.target.checked); };
 if (/bed=open/.test(location.hash)) { $('bedT').checked = true; $('bedT').onchange({ target: $('bedT') }); }   // preview link
 $('partT').onchange = e => setPartition(!e.target.checked);
