@@ -399,7 +399,7 @@ function bossChair(x, z, rot) {
 // Sections (from the reference): 'long' = long hang (rod 1900, coats/dresses), 'double' = two hang
 // rods (1900 / 1000, shirts + trousers), 'shelves' = folded shelves over 3 drawers. Loft above 2400.
 // Hinged door leaves are groups; the "Wardrobes open" switch swings them out.
-const wardrobeDoors = [];
+const wardrobeDoors = [], liftFlaps = [];   // flaps rotate about x (lift up)
 function wardrobeRun(x1, x2, back, dir, top, types, hinges = [], pal = {}) {   // hinges[i]: +1 left / -1 right (single-leaf sections)
   const keep = m => { m.userData.keepColor = true; return m; };
   const shut = keep(mat(pal.shut ?? 0xf2efe9, { roughness: 0.55 })), carc = keep(mat(pal.carc ?? 0xe4ddd2)), oakI = keep(mat(0xd6bb98, { roughness: 0.55 }));
@@ -1393,18 +1393,34 @@ wardrobeRun(7950, 10225, 4365, 1, 2880, ['long', 'double', 'shelves'], [], { shu
     bedG.position.x = 315;
     // option: bed 500 toward the wardrobe with a storage wall behind it (toggle to compare)
     const behindG = new THREE.Group(); behindG.visible = false; furn.add(behindG);
-    { const lt2 = keep(mat(0xd9cec0, { roughness: 0.5 })), cr2 = keep(mat(0xe8e1d6)), X1 = 8465, X2 = E0 - 150, Z = S - 500;
-      const f3 = (x1, z1, x2, z2, y0, y1, m) => box(x2 - x1, y1 - y0, z2 - z1, (x1 + x2) / 2, (y0 + y1) / 2, (z1 + z2) / 2, m, behindG);
-      f3(X1, Z, X2, S, 0, 2860, cr2);                                            // 500-deep storage wall
-      f3(X1, Z - 18, X2, Z, 1250, 2860, cr2);
+    { // storage wall behind the bed (500 deep): lower box behind the headboard opens from the top through
+      // a lift-up lid that is also the floor of a lit headboard niche (works as the bedside table);
+      // upper storage has lift-up (vertical-opening) flaps. All open with the "Wardrobes open" switch.
+      const lt2 = keep(mat(0xd9cec0, { roughness: 0.5 })), cr2 = keep(mat(0xe8e1d6)), dk2 = keep(mat(0xa69888, { roughness: 0.55 }));
+      const X1 = 8465, X2 = E0 - 150, Z = S - 500, NB = 1250, NT = 1560, ND = 260;
+      const f3 = (x1, z1, x2, z2, y0, y1, m, g = behindG) => box(x2 - x1, y1 - y0, z2 - z1, (x1 + x2) / 2, (y0 + y1) / 2, (z1 + z2) / 2, m, g);
+      f3(X1, Z, X2, S, 0, NB - 20, cr2);                                         // lower box (behind headboard)
+      f3(X1, Z - 6, X2, Z, 0, NB - 20, lt2);                                     // its front panel
+      f3(X1, Z + ND, X2, S, NB - 20, NT, cr2);                                   // niche back block
+      f3(X1, Z, X1 + 20, Z + ND, NB - 20, NT, dk2); f3(X2 - 20, Z, X2, Z + ND, NB - 20, NT, dk2);   // niche sides
+      f3(X1, Z + ND - 4, X2, Z + ND, NB, NT, dk2);                               // niche back, darker taupe
+      f3(X1 + 20, Z + 10, X2 - 20, Z + 20, NT - 12, NT - 4, glow);               // LED in the niche
+      const lid = new THREE.Group(); lid.position.set((X1 + X2) / 2, NB, Z + ND); behindG.add(lid);   // lift-up lid, hinged at the back
+      box(X2 - X1 - 44, 20, ND - 4, 0, -10, -(ND - 4) / 2, dk2, lid);
+      box(160, 4, 20, 0, 1, -ND + 20, keep(mat(0x8a7c6e)), lid);                 // finger notch
+      for (const [x, z, w, d, h, m] of [[X1 + 180, Z + 120, 75, 150, 10, keep(mat(0x1a1a1c))], [X2 - 260, Z + 110, 150, 200, 30, keep(mat(0xefe9df))]])
+        box(w, h, d, x, NB + h / 2, z, m, behindG);                               // phone, book
+      cyl(X2 - 380, NB, Z + 150, 110, 35, keep(mat(0xe8e1d6)));
+      f3(X1, Z, X2, S, NT, 2860, cr2);                                           // upper box
       const n = 4, w = (X2 - X1) / n;
-      for (let i = 0; i < n; i++) { const a = X1 + i * w + 2, b = a + w - 4;
-        f3(a, Z - 18, b, Z, 1255, 2855, lt2);                                   // upper doors above the headboard
-        const px = i % 2 ? a + 28 : b - 40; f3(px, Z - 30, px + 12, Z - 18, 1300, 1700, bronze); }
-      f3(X1, Z - 18, X1 + 300, Z, 0, 1250, lt2); f3(X2 - 300, Z - 18, X2, Z, 0, 1250, lt2);   // side doors beside the headboard
-      f3(X1 + 270, Z - 30, X1 + 282, Z - 18, 500, 1100, bronze); f3(X2 - 282, Z - 30, X2 - 270, Z - 18, 500, 1100, bronze);
-      f3(X1 + 300, Z - 6, X2 - 300, Z, 0, 1250, lt2);                           // panel behind the headboard (lift-up access from above)
-      f3(X1 + 10, Z - 25, X2 - 10, Z - 18, 1240, 1250, glow); }
+      for (const [y0, y1] of [[NT + 5, 2205], [2210, 2855]]) for (let i = 0; i < n; i++) {
+        const a = X1 + i * w + 2, b = a + w - 4, g = new THREE.Group(); g.position.set((a + b) / 2, y1, Z - 9); behindG.add(g);   // hinged at the top
+        box(b - a, y1 - y0, 18, 0, -(y1 - y0) / 2, 0, lt2, g);
+        box(b - a - 80, 10, 12, 0, -(y1 - y0) + 30, -15, bronze, g);             // horizontal pull at the bottom edge
+        liftFlaps.push({ g, open: 1.3 });
+      }
+      liftFlaps.push({ g: lid, open: 1.2 });
+    }
     window.setBedStorage = on => { behindG.visible = on; bedG.position.z = on ? -500 : 0; window.deskCurve?.(!on); };
     // --- study wall (south, x 6975-8150): full-height unit in kitchen colours (light taupe + darker
     // taupe contrast). Ceiling-high cabinets with curved inner corners, a rounded lit open niche, darker
@@ -2261,7 +2277,7 @@ $('blindT').onchange = e => setBlind(e.target.checked);
 $('kdrT').onchange = e => setKDrawers(e.target.checked);
 $('bsT').onchange = e => setBedStorage(e.target.checked);
 if (/bs=on/.test(location.hash)) { $('bsT').checked = true; setBedStorage(true); }
-$('wdrT').onchange = e => wardrobeDoors.forEach(({ g, open }) => { g.rotation.y = e.target.checked ? open : 0; });
+$('wdrT').onchange = e => { wardrobeDoors.forEach(({ g, open }) => { g.rotation.y = e.target.checked ? open : 0; }); liftFlaps.forEach(({ g, open }) => { g.rotation.x = e.target.checked ? open : 0; }); };
 if (/wdr=open/.test(location.hash)) { $('wdrT').checked = true; $('wdrT').onchange({ target: $('wdrT') }); }   // preview link
 if (/kdr=open/.test(location.hash)) { $('kdrT').checked = true; setKDrawers(true); }   // preview link
 $('kfin').onchange = e => setKitchenFinish(e.target.value);
