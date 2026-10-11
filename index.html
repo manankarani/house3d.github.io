@@ -81,7 +81,7 @@
     <label class="row"><span>Bedroom sheer blinds down</span><input type="checkbox" class="switch" id="blindT"></label>
     <div class="row"><span>Kitchen finish</span><select id="kfin" style="width:auto"><option value="cloud" selected>Cloud Dancer</option><option value="charcoal">Charcoal & walnut</option><option value="sage">Sage & brass</option><option value="greige">Greige & white</option></select></div>
     <label class="row"><span>Kitchen drawers open</span><input type="checkbox" class="switch" id="kdrT"></label>
-    <label class="row"><span>Dressing mirror open</span><input type="checkbox" class="switch" id="mirT"></label>
+    <label class="row"><span>Wardrobes open</span><input type="checkbox" class="switch" id="wdrT"></label>
     <label class="row"><span>Imagine: refuge drying</span><input type="checkbox" class="switch" id="refugeT" checked></label>
   </section>
   <section>
@@ -394,6 +394,61 @@ function bossChair(x, z, rot) {
 // Detailed floor-to-ceiling wardrobe along a wall running in x. back = wall face z, dir = +1 if the
 // front faces +z. Recessed plinth, handle-less shutters with a shadow gap, one fluted-glass lit bay
 // with hanging clothes, long slim bar pulls, separate loft shutters up to `top`.
+// Detailed wardrobe run along a wall in x (back = wall face z, dir = +1 if the front faces +z).
+// Sections (from the reference): 'long' = long hang (rod 1900, coats/dresses), 'double' = two hang
+// rods (1900 / 1000, shirts + trousers), 'shelves' = folded shelves over 3 drawers. Loft above 2400.
+// Hinged door leaves are groups; the "Wardrobes open" switch swings them out.
+const wardrobeDoors = [];
+function wardrobeRun(x1, x2, back, dir, top, types, hinges = []) {   // hinges[i]: +1 left / -1 right (single-leaf sections)
+  const keep = m => { m.userData.keepColor = true; return m; };
+  const shut = keep(mat(0xf2efe9, { roughness: 0.55 })), carc = keep(mat(0xe4ddd2)), oakI = keep(mat(0xd6bb98, { roughness: 0.55 }));
+  const champ = keep(mat(0xc8ae84, { metalness: 0.75, roughness: 0.3 })), rodM = keep(mat(0xb9bcc0, { metalness: 0.8, roughness: 0.3 }));
+  const ledM = keep(mat(0xfff1dc, { emissive: 0xffd9a0, emissiveIntensity: 1.8 }));
+  const cloth = [0xe9e4da, 0x8fa39a, 0xc98f6e, 0x3f4a5c, 0xd9c7a3, 0xf4f4f2, 0x9a7cae, 0xb5582e].map(c => keep(mat(c, { roughness: 0.95 })));
+  const D = 600, F = back + dir * D;
+  const P = (a, b, d1, d2, y0, y1, m) => fb(a, Math.min(back + dir * d1, back + dir * d2), b, Math.max(back + dir * d1, back + dir * d2), y0, y1, m);
+  P(x1, x2, 0, D - 40, 0, 80, M.dark);                                       // recessed plinth
+  P(x1, x2, 0, 15, 80, top, oakI);                                           // oak-finish back
+  P(x1, x2, 15, D - 20, 80, 98, carc);                                       // bottom
+  P(x1, x2, 15, D - 20, 2380, 2400, carc);                                   // loft divider
+  P(x1, x1 + 18, 0, D - 20, 80, top, carc); P(x2 - 18, x2, 0, D - 20, 80, top, carc);
+  const n = types.length, sw = (x2 - x1) / n;
+  let ci = 0;
+  types.forEach((t, i) => {
+    const a = x1 + i * sw, b = a + sw, A = a + 18, B = b - (i < n - 1 ? 9 : 18);
+    if (i < n - 1) P(b - 9, b + 9, 15, D - 20, 80, top, carc);               // partition
+    P(A, B, 15, D - 20, 2560, 2575, carc);                                    // loft shelf
+    P(A, B, D - 60, D - 52, 2370, 2378, ledM);                                // LED strip at the top of the section
+    const hang = (yRod, len) => {
+      P(A + 10, B - 10, D / 2 - 10, D / 2 + 10, yRod, yRod + 20, rodM);
+      for (let x = A + 40; x < B - 30; x += 45) P(x, x + 22, 90, D - 90, yRod - len, yRod - 30, cloth[ci++ % cloth.length]);
+    };
+    if (t === 'long') hang(2200, 1300);
+    else if (t === 'double') { hang(2200, 800); P(A, B, 15, D - 20, 1250, 1268, carc); hang(1200, 650); }
+    else {
+      for (const y of [1250, 1650, 2000]) {
+        P(A, B, 15, D - 20, y, y + 18, carc);
+        for (let x = A + 30; x < B - 160; x += 170) for (let k = 0; k < 3; k++) P(x, x + 140, 80, D - 120, y + 18 + k * 45, y + 58 + k * 45, cloth[(ci++) % cloth.length]);   // folded stacks
+      }
+      P(A, B, 15, D - 20, 920, 938, carc);
+      for (const [y0, y1] of [[100, 370], [380, 650], [660, 910]]) {           // drawers with oak fronts + champagne pulls
+        P(A + 5, B - 5, D - 40, D - 22, y0, y1, oakI);
+        P((A + B) / 2 - 70, (A + B) / 2 + 70, D - 22, D - 16, y1 - 50, y1 - 38, champ);
+      }
+    }
+    // doors: 1 leaf if the section is narrow, else 2; hinged on the outer edges
+    const leaves = sw > 650 ? [[a + 2, (a + b) / 2 - 1, 1], [(a + b) / 2 + 1, b - 2, -1]] : [[a + 2, b - 2, hinges[i] ?? (i % 2 ? -1 : 1)]];
+    for (const [la, lb, side] of leaves) {
+      const w = lb - la, g = new THREE.Group();
+      g.position.set(side > 0 ? la : lb, 0, F + dir * 9); furn.add(g);
+      box(w, 2290, 18, side * w / 2, 90 + 2290 / 2, 0, shut, g);               // leaf
+      box(12, 900, 14, side * (w - 40), 1300, dir * 16, champ, g);             // long pull near the free edge
+      wardrobeDoors.push({ g, open: -dir * side * 1.45 });
+    }
+    P(a + 2, b - 2, D, D + 18, 2402, top - 4, shut);                         // loft door (stays shut)
+  });
+  P(x1, x2, D, D + 2, 2380, 2400, M.dark);                                    // shadow line
+}
 function wardrobe(u1, u2, back, dir, top, glassBay = -1) {
   const DEP = 600, P = (a, b, d1, d2, y0, y1, m) => fb(a, Math.min(back + dir * d1, back + dir * d2), b, Math.max(back + dir * d1, back + dir * d2), y0, y1, m);
   const shut = mat(0xe8e2d8, { roughness: 0.6 }), bodyW = mat(0xcfc6b8, { roughness: 0.8 }), bar = mat(0xb7b3ab, { metalness: 0.6, roughness: 0.35 });
@@ -1245,7 +1300,7 @@ function setKitchenFinish(k) {
 // Bedroom 2: integrated desk + bed + wardrobe unit, see the bedroom decor block
 
 // Bedroom 1: queen bed on the bottom wall, side tables, wardrobe on top wall, study desk
-wardrobe(7950, 10225, 4365, 1, 2880, 2);                // top wall: 5 bays, lit glass bay in the middle, up to the false ceiling
+wardrobeRun(7950, 10225, 4365, 1, 2880, ['long', 'double', 'shelves']);   // detailed wardrobe, north wall
 
 // ---------- Bedroom decor ----------
 {
@@ -1411,48 +1466,46 @@ wardrobe(7950, 10225, 4365, 1, 2880, 2);                // top wall: 5 bays, lit
     const mirror = keep(mat(0xe6eef0, { metalness: 0.9, roughness: 0.04 }));
     const glow = keep(mat(0xfff1dc, { emissive: 0xffd9a0, emissiveIntensity: 2 }));
     const W = 8075, E = 11092, S = 2945, TOP = 2980;
-    // --- one merged south-wall unit, light finishes (refs: arched niche + wardrobe + pull-out desk):
-    // door side -> east: arched lit niche (400) | 2-door wardrobe (932) | dressing table (800, 450 deep)
-    // with a mirror door over a makeup cabinet, cabinets above. White matte + natural oak, champagne pulls.
+    // --- L in the south-east corner (per the reference): detailed wardrobe on the south wall
+    // (x 10000-11092) turning onto the east wall as a tall open column with arched cut-outs
+    // (z 1790-2345, 450 deep, closing the dead end of the bed aisle); dressing desk on the south wall
+    // x 8980-10000 with a mirror, lit open shelf and glass-door cabinets above.
     {
       const wh = keep(mat(0xf2efe9, { roughness: 0.55 })), oakN = keep(mat(0xd2b48c, { roughness: 0.5 }));
-      const F = S - 600, X0 = 8960, NX = 9360, WX = 10292;
-      fb(X0, F + 40, E, S, 0, 80, keep(mat(0xd9d3c9)));                        // recessed plinth
-      // arched niche: oak-lined, lit shelves, closed base, white arched front frame
-      fb(X0, F, NX, S, 80, 750, wh); fb(X0 + 3, F - 18, NX - 3, F, 90, 740, wh);   // base cabinet + door
-      fb(X0, S - 20, NX, S, 750, 2980, oakN);                                   // oak back
-      fb(X0, F, X0 + 20, S, 750, 2980, oakN); fb(NX - 20, F, NX, S, 750, 2980, oakN);
-      for (const y of [1150, 1550, 1950]) { fb(X0 + 20, F + 20, NX - 20, S - 20, y, y + 20, oakN); fb(X0 + 20, F + 20, NX - 20, F + 30, y - 10, y, glow); }
-      { const sh = new THREE.Shape([[0, 750], [400, 750], [400, 2980], [0, 2980]].map(p => new THREE.Vector2(...p)));
-        const h = new THREE.Path(); h.moveTo(30, 750); h.lineTo(370, 750); h.lineTo(370, 2200); h.absarc(200, 2200, 170, 0, Math.PI, false); h.lineTo(30, 750); sh.holes.push(h);
-        const fr = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: 20, bevelEnabled: false }), wh); fr.position.set(X0, 0, F - 20); furn.add(fr); }
-      cyl(X0 + 200, 1170, F + 300, 160, 55, keep(mat(0xd9cfc0))); fb(X0 + 80, F + 200, X0 + 320, F + 420, 1570, 1600, keep(mat(0xefe9df)));   // (W is the wall x here)
-      cyl(X0 + 140, 1970, F + 300, 120, 45, keep(mat(0x9a5b3c)));
-      // wardrobe: 2 hinged doors + loft, recessed champagne pulls
-      fb(NX, F, WX, S, 80, 2980, keep(mat(0xe2ddd4)));
-      const dw = (WX - NX) / 2;
-      for (let i = 0; i < 2; i++) {
-        const a = NX + i * dw + 2, b = a + dw - 4;
-        fb(a, F - 18, b, F, 90, 2380, wh); fb(a, F - 18, b, F, 2400, 2976, wh);
-        const px = i ? a + 30 : b - 42; fb(px, F - 30, px + 12, F - 18, 900, 1700, champ);
-      }
-      fb(NX, F - 18, WX, F - 16, 2380, 2400, keep(mat(0xd9d3c9)));
-      // dressing table pulled out of the run: shallower top, drawer, knee space, mirror door + makeup cabinet
-      const T = S - 450;
-      fb(WX, T, E, S, 720, 760, oakN);                                           // oak top
-      fb(WX + 5, T + 10, E, S, 600, 720, wh); fb(WX + 300, T + 4, WX + 500, T + 10, 650, 662, champ);   // drawer
-      fb(WX, S - 150, E, S, 1000, 2000, keep(mat(0xe2ddd4)));                   // makeup cabinet (150 deep)
-      for (const y of [1250, 1500, 1750]) fb(WX + 10, S - 140, E - 10, S - 5, y, y + 10, wh);
-      let k2 = 0; for (const y of [1260, 1510]) for (let x = WX + 80; x < E - 60; x += 90) cyl(x, y, S - 70, 70 + (k2 % 3) * 35, 20, keep(mat([0xb5582e, 0xd9a441, 0xe8d6c6, 0xc9a7a0][k2++ % 4], { roughness: 0.4 })));
-      const md = new THREE.Group(); md.position.set(WX + 5, 0, S - 150); furn.add(md);   // mirror door, hinged at the wardrobe side
-      box(E - WX - 10, 1000, 18, (E - WX - 10) / 2, 1500, -9, wh, md);
-      box(E - WX - 50, 960, 4, (E - WX - 10) / 2, 1500, -20, mirror, md);
-      box(E - WX - 50, 6, 6, (E - WX - 10) / 2, 1995, -22, glow, md);
-      window.dressMirror = md;
-      fb(WX, S - 350, E, S, 2050, 2980, wh);                                     // cabinet above
-      for (const [a, b] of [[WX, (WX + E) / 2], [(WX + E) / 2, E]]) fb(a + 2, S - 368, b - 2, S - 350, 2055, 2976, wh);
+      wardrobeRun(10000, E, S, -1, TOP, ['double', 'shelves'], [1, 1]);   // both hinge west so no leaf hits the corner column
+      // east-wall open column with arched (stadium) cut-outs, lit oak shelves
+      const CZ1 = 1790, CZ2 = 2345, CX = E - 450;
+      fb(CX, CZ1, E, CZ2, 0, 80, M.dark); fb(CX + 20, CZ1, E, CZ2, 80, TOP, oakN);
+      for (const y of [80, 900, 1700, 2500]) fb(CX + 20, CZ1 + 20, E, CZ2 - 20, y, y + 20, wh);
+      for (const y of [1150, 1950]) { fb(CX + 20, CZ1 + 20, E, CZ2 - 20, y, y + 18, oakN); fb(CX + 30, CZ1 + 30, CX + 40, CZ2 - 30, y - 8, y, glow); }
+      { const Wd = CZ2 - CZ1, sh = new THREE.Shape([[0, 0], [Wd, 0], [Wd, TOP], [0, TOP]].map(p => new THREE.Vector2(...p)));
+        const stadium = (y0, y1) => { const r = (Wd - 90) / 2, h = new THREE.Path(); h.moveTo(45, y0 + r); h.absarc(Wd / 2, y0 + r, r, Math.PI, 0, false);
+          h.lineTo(Wd - 45, y1 - r); h.absarc(Wd / 2, y1 - r, r, 0, Math.PI, false); h.lineTo(45, y0 + r); return h; };
+        sh.holes.push(stadium(950, 1680), stadium(1750, 2480));
+        const fr = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: 20, bevelEnabled: false }), wh);
+        fr.rotation.y = Math.PI / 2; fr.position.set(CX, 0, CZ2); fr.castShadow = true; furn.add(fr); }
+      fb(CX, CZ1 + 10, CX + 20, CZ2 - 10, 100, 880, wh);                     // closed base door
+      cyl(CX + 220, 1168, (CZ1 + CZ2) / 2, 180, 55, keep(mat(0xd9cfc0)));
+      fb(CX + 120, CZ1 + 120, CX + 360, CZ2 - 200, 1968, 2000, keep(mat(0xefe9df)));
+      cyl(CX + 230, 2000, CZ2 - 120, 140, 45, keep(mat(0x9a5b3c)));
+      // dressing desk (south wall x 8980-10000), per reference 2: desk, mirror, lit shelf, glass cabinets
+      const X1 = 8980, X2 = 10000, T = S - 450;
+      fb(X1, T, X2, S, 730, 760, oakN);                                       // desk top
+      fb(X1 + 5, T + 10, X1 + 450, S, 590, 730, wh); fb(X1 + 180, T + 4, X1 + 280, T + 10, 650, 662, champ);   // drawer
+      fb(X1, T, X1 + 18, S, 0, 730, wh);                                      // leg panel by the door
+      fb(X1 + 200, S - 20, X2 - 100, S - 14, 900, 1500, champ);              // mirror frame
+      fb(X1 + 220, S - 24, X2 - 120, S - 20, 920, 1480, mirror);
+      fb(X1, S - 260, X2, S, 1600, 1620, oakN);                               // lit open shelf
+      fb(X1 + 10, S - 250, X2 - 10, S - 240, 1592, 1600, glow);
+      fb(X1, S - 300, X2, S, 1900, TOP, wh);                                  // cabinets above
+      const hw = (X2 - X1) / 2;
+      fb(X1 + 3, S - 318, X1 + hw - 3, S - 300, 1905, TOP - 4, keep(mat(0xdfe4dc, { transparent: true, opacity: 0.45, roughness: 0.2 })));   // glass door
+      fb(X1 + 3, S - 322, X1 + 23, S - 300, 1905, TOP - 4, oakN);
+      fb(X1 + 20, S - 280, X1 + hw - 20, S - 20, 2400, 2412, wh); fb(X1 + 30, S - 60, X1 + hw - 30, S - 50, 2392, 2400, glow);
+      fb(X1 + hw + 3, S - 318, X2 - 3, S - 300, 1905, TOP - 4, wh);           // solid door
+      let k2 = 0; for (let x = X1 + 520; x < X2 - 60; x += 80) cyl(x, 760, S - 120, 70 + (k2 % 3) * 35, 22, keep(mat([0xb5582e, 0xd9a441, 0xe8d6c6, 0xc9a7a0][k2++ % 4], { roughness: 0.4 })));
       { const st = new THREE.Mesh(new THREE.CylinderGeometry(180, 160, 430, 32), keep(mat(0xe8dfd2, { roughness: 1 })));
-        st.position.set((WX + E) / 2, 215, T - 230); furn.add(st); }               // stool tucks under
+        st.position.set((X1 + X2) / 2, 215, T - 220); furn.add(st); }
     }
     let k = 0;
     // --- queen bed, head on the east wall, no headboard
@@ -2119,7 +2172,8 @@ $('partT').onchange = e => setPartition(!e.target.checked);
 $('rackT').onchange = e => setRack(e.target.checked);
 $('blindT').onchange = e => setBlind(e.target.checked);
 $('kdrT').onchange = e => setKDrawers(e.target.checked);
-$('mirT').onchange = e => { if (window.dressMirror) window.dressMirror.rotation.y = e.target.checked ? 1.5 : 0; };
+$('wdrT').onchange = e => wardrobeDoors.forEach(({ g, open }) => { g.rotation.y = e.target.checked ? open : 0; });
+if (/wdr=open/.test(location.hash)) { $('wdrT').checked = true; $('wdrT').onchange({ target: $('wdrT') }); }   // preview link
 if (/kdr=open/.test(location.hash)) { $('kdrT').checked = true; setKDrawers(true); }   // preview link
 $('kfin').onchange = e => setKitchenFinish(e.target.value);
 $('refugeT').onchange = e => setRefugeDrying(e.target.checked);
