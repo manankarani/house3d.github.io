@@ -1426,9 +1426,9 @@ wardrobeRun(7950, 10225, 4365, 1, 2880, ['long', 'double', 'shelves'], [], { shu
     // desk: darker top, waterfall curve down to the floor at the bed end, light-taupe drawer box
     const TY = 760, TT = 40, R = 120;
     fb(DX1, S - DD, DX2 - R, S, TY - TT, TY, dk);
-    { const q = new THREE.Mesh(new THREE.CylinderGeometry(R, R, DD, 32, 1, false, 0, Math.PI / 2), dk);
+    { const q = new THREE.Mesh(new THREE.CylinderGeometry(R, R, DD, 32, 1, false, Math.PI / 2, Math.PI / 2), dk);   // top-outer quadrant
       q.rotation.x = Math.PI / 2; q.position.set(DX2 - R, TY - R, S - DD / 2); furn.add(q);   // quarter round
-      const qi = new THREE.Mesh(new THREE.CylinderGeometry(R - TT, R - TT, DD + 2, 32, 1, false, 0, Math.PI / 2), keep(mat(0xe3ddd3)));
+      const qi = new THREE.Mesh(new THREE.CylinderGeometry(R - TT, R - TT, DD + 2, 32, 1, false, Math.PI / 2, Math.PI / 2), keep(mat(0xe3ddd3)));
       qi.rotation.x = Math.PI / 2; qi.position.set(DX2 - R - 0.5, TY - R, S - DD / 2); furn.add(qi); }
     fb(DX2 - TT, S - DD, DX2, S, 0, TY - R, dk);                                 // waterfall side to the floor
     fb(DX1, S - DD + 30, DX1 + 460, S, 380, TY - TT, lt);                        // drawer box
