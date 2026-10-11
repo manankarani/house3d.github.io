@@ -2442,7 +2442,7 @@ renderer.domElement.addEventListener('pointermove', e => {
 const THEME = (() => {
   // Cloud Dancer, refined to 2026 "quiet luxury": warm plaster white, mushroom/taupe accents, travertine
   // floor, smoked oak, cashmere joinery, ivory boucle, espresso depth, champagne-bronze metal, 2700 K.
-  const cloud = { id: 'cloud', wall: '#f1ede6', accent: '#b9ab98', floor: '#e6dfd3', wood: '#9a7656', cab: '#dcd3c6',
+  const cloud = { id: 'cloud', wall: '#e9dfcf', accent: '#b9ab98', floor: '#e6dfd3', wood: '#9a7656', cab: '#dcd3c6',
     sofa: '#e8e1d5', deep: '#5c4c40', recl: '#b9c7b5', metal: '#9b8363', glass: '#b8a893', k: 2700 };
   try { const t = JSON.parse(localStorage.getItem('houseThemeData')); return t && t.id !== 'cloud' ? { deep: '#5c4c40', ...t } : cloud; } catch (e) { return cloud; }
 })();
