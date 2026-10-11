@@ -2462,7 +2462,7 @@ const THEME = (() => {
   const C = k => new THREE.Color(THEME[k]);
   const light = new THREE.Color({ 2700: 0xffcf96, 3000: 0xffdcb0, 3500: 0xffe8cc }[THEME.k] || 0xffdcb0);
   const skip = new Set([frameMat, glassMat, frostMat, bathFloorMat]);
-  const explicit = new Map([[wallMat, C('wall')], [floorMat, C('floor')], [doorMat, C('wood')], [doorGroove, C('wood').multiplyScalar(0.8)],
+  const explicit = new Map([[wallMat, C('wall')], [floorMat, C('floor')], [doorMat, new THREE.Color(0xd9cec0)], [doorGroove, new THREE.Color(0xa69888)],   // room doors + frames: light taupe, darker grooves
     [M.fabric, C('sofa')], [M.cushion, C('accent').lerp(C('sofa'), 0.5)], [M.bed, C('wall').lerp(new THREE.Color(0xffffff), 0.3)],
     [M.walnut, C('wood').multiplyScalar(0.75)], [M.linen, C('accent')], [M.oak, C('wood')], [M.wood, C('wood')], [M.leather, C('deep')]]);
   const role = c => {
@@ -2521,6 +2521,47 @@ scene.traverse(o => {
     if (m.emissive && m.emissive.getHex() && m.emissiveIntensity > 0) m.emissiveIntensity *= 2.6;
   }
 });
+// ---- anti-flicker: find faces of two boxes lying in the same plane and facing the same way (z-fighting)
+// and push the smaller box 1.2 mm out along that face so it sits cleanly proud of the other.
+{
+  const items = [], bb = new THREE.Box3(), e = new THREE.Matrix4(), v = new THREE.Vector3();
+  scene.updateMatrixWorld(true);
+  scene.traverse(o => {
+    if (!o.isMesh || o.isInstancedMesh || !o.geometry) return;
+    const m = o.matrixWorld.elements;                                  // axis-aligned only (0/90/180/270 about y)
+    const aligned = [m[1], m[4], m[6], m[9]].every(x => Math.abs(x) < 1e-6) || [m[0], m[2], m[8], m[10], m[1], m[9]].every(x => Math.abs(x) < 1e-6);
+    if (!aligned) return;
+    if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
+    bb.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld);
+    if (bb.min.x < -8000 || bb.max.x > 12500 || bb.min.z < -500 || bb.max.z > 9000 || bb.min.y < -200 || bb.max.y > 3200) return;
+    const s = bb.getSize(v);
+    items.push({ o, min: bb.min.clone(), max: bb.max.clone(), vol: Math.max(s.x, 1) * Math.max(s.y, 1) * Math.max(s.z, 1) });
+  });
+  items.sort((a, b) => a.min.x - b.min.x);
+  const ax = ['x', 'y', 'z'], moved = new Set(); let pairs = 0;
+  for (let i = 0; i < items.length; i++) {
+    const A = items[i];
+    for (let j = i + 1; j < items.length && items[j].min.x <= A.max.x + 0.5; j++) {
+      const B = items[j];
+      if (B.min.y > A.max.y + 0.5 || B.max.y < A.min.y - 0.5 || B.min.z > A.max.z + 0.5 || B.max.z < A.min.z - 0.5) continue;
+      for (let k = 0; k < 3; k++) {
+        const o1 = ax[(k + 1) % 3], o2 = ax[(k + 2) % 3];
+        const ov1 = Math.min(A.max[o1], B.max[o1]) - Math.max(A.min[o1], B.min[o1]), ov2 = Math.min(A.max[o2], B.max[o2]) - Math.max(A.min[o2], B.min[o2]);
+        if (ov1 < 1 || ov2 < 1) continue;
+        for (const side of ['max', 'min']) {
+          if (Math.abs(A[side][ax[k]] - B[side][ax[k]]) > 0.4) continue;
+          const S = A.vol <= B.vol ? A : B, dir = side === 'max' ? 1 : -1;
+          const w = new THREE.Vector3(); w[ax[k]] = 1.2 * dir;
+          const p = S.o.parent; p.updateMatrixWorld(true);
+          const local = w.clone().transformDirection(e.copy(p.matrixWorld).invert()).multiplyScalar(1.2 / p.getWorldScale(new THREE.Vector3()).x);
+          S.o.position.add(local); S.min[ax[k]] += 1.2 * dir; S.max[ax[k]] += 1.2 * dir;
+          S.o.updateMatrixWorld(true); moved.add(S.o); pairs++;
+        }
+      }
+    }
+  }
+  console.log(`[flicker] coplanar face pairs fixed: ${pairs} (meshes nudged: ${moved.size})`);
+}
 // ---- perf: merge static meshes by material (thousands of draw calls -> a few hundred) ----
 // Anything moved or toggled on its own is kept as-is; groups (doors, sashes, chairs, partition panels,
 // v1/v2, racks...) are merged inside themselves, so group toggles still work.
